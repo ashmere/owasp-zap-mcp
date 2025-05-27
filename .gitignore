@@ -79,3 +79,5 @@ Thumbs.db
 # Docker (optional - uncomment if you want to ignore these)
 # docker-compose.override.yml
 # .dockerignore
+
+reports/
