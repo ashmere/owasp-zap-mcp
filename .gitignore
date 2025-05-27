@@ -47,6 +47,9 @@ htmlcov/
 coverage.xml
 *.cover
 
+# Pre-commit
+.pre-commit-cache/
+
 # Logs
 *.log
 logs/

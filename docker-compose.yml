@@ -1,0 +1,65 @@
+services:
+  # OWASP ZAP Security Scanner
+  zap:
+    image: zaproxy/zap-stable:latest
+    container_name: zap
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    command: >
+      zap.sh -daemon -host 0.0.0.0 -port 8080 
+      -config api.addrs.addr.name=.* 
+      -config api.addrs.addr.regex=true
+      -config api.disablekey=true
+    environment:
+      - ZAP_PORT=${ZAP_PORT:-8080}
+    volumes:
+      - zap_data:/zap/wrk
+    networks:
+      - zap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/JSON/core/view/version/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # OWASP ZAP MCP Server (New Modular Implementation)
+  owasp-zap-mcp:
+    build:
+      context: ./owasp_zap_mcp
+      dockerfile: Dockerfile
+    container_name: owasp-zap-mcp
+    depends_on:
+      zap:
+        condition: service_healthy
+    environment:
+      - ZAP_BASE_URL=http://zap:8080
+      - ZAP_API_KEY=
+      - LOG_LEVEL=INFO
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+    networks:
+      - zap-network
+    # For stdio mode (default)
+    command: ["owasp-zap-mcp"]
+    # For SSE mode, uncomment the following:
+    # ports:
+    #   - "3000:3000"
+    # command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  zap_data:
+    driver: local
+
+networks:
+  zap-network:
+    driver: bridge 
