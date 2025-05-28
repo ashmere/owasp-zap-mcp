@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Development container
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/universal:linux
+    volumes:
+      - ..:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    command: sleep infinity
+    network_mode: host
+    environment:
+      - LOCAL_WORKSPACE_FOLDER=/workspace
+    user: codespace
+
+  # ZAP service (same as main docker-compose.yml)
+  zap:
+    image: zaproxy/zap-stable:latest
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    command: >
+      zap.sh -daemon -host 0.0.0.0 -port 8080
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config api.disablekey=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/JSON/core/view/version/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - zap-network
+
+  # MCP Server service (same as main docker-compose.yml)
+  owasp-zap-mcp:
+    build: 
+      context: ../owasp_zap_mcp
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      zap:
+        condition: service_healthy
+    environment:
+      - LOG_LEVEL=INFO
+      - ZAP_BASE_URL=http://zap:8080
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+    command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - zap-network
+
+networks:
+  zap-network:
+    driver: bridge 

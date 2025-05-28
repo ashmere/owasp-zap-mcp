@@ -33,6 +33,7 @@ from mcp.server.fastmcp import FastMCP
 # Config and Tool Initializer
 from .config import SERVER_HOST, SERVER_PORT, load_config
 from .tools.tool_initializer import register_mcp_tools
+from .sse_server import ZAPMCPSseServer
 
 # Load environment variables (load early for all modes)
 load_dotenv(override=True)
@@ -109,10 +110,10 @@ async def start_sse_server(args):
         expose_headers=["Mcp-Session-Id"],
     )
 
-    # --- Add basic health endpoint ---
-    @app.get("/health")
-    async def health_check():
-        return {"status": "healthy", "service": "owasp-zap-mcp"}
+    # --- Initialize SSE Server Handler and Register Routes ---
+    logger.info("Initializing SSE server handler and registering routes...")
+    sse_server_handler = ZAPMCPSseServer(sse_mcp, app)
+    logger.info("SSE Server handler initialized and routes registered.")
 
     # --- Print Configuration and Endpoints ---
     print("--- SSE Mode Configuration ---")
@@ -128,6 +129,9 @@ async def start_sse_server(args):
     base_url = f"http://{args.host}:{args.port}"
     print(f"Service running at: {base_url}")
     print(f"  Health Check: GET {base_url}/health")
+    print(f"  Status Check: GET {base_url}/status")
+    print(f"  SSE Init: GET {base_url}/sse")
+    print(f"  MCP Messages: POST {base_url}/mcp/messages")
     print("------------------------------")
     print("Use Ctrl+C to stop the service")
 

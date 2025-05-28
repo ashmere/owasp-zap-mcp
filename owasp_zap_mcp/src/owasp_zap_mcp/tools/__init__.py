@@ -8,7 +8,7 @@ This package contains all the MCP tools for OWASP ZAP security scanning.
 Tools are organized by functionality and registered through the tool_initializer.
 """
 
-__version__ = "0.1.0"
+__version__ = ""
 
 # Import all tool modules
 from . import tool_initializer, zap_tools

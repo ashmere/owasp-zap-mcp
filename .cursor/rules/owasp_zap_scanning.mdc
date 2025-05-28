@@ -9,7 +9,7 @@ alwaysApply: false
 When performing OWASP ZAP security scans, ALWAYS organize reports in subdirectories:
 
 ### Directory Structure Requirements
-- All scan reports MUST be placed in `/reports/{target_domain}/`
+- All scan reports MUST be placed in `reports/{target_domain}/`
 - Extract the domain name from the target URL (e.g., `https://example.com/path` → `example.com`)
 - Create a subdirectory named after the target domain
 - Place ALL report files in this subdirectory
@@ -21,10 +21,11 @@ For each scan, generate the following reports in the target subdirectory:
 3. `{domain}_security_report.json` - JSON format report
 4. `{domain}_alerts_summary.json` - Detailed alerts data
 5. `{domain}_scan_summary.md` - Executive summary with key findings
+6. `{domain}_scan_status.md` - Scan completion status and metrics
 
 ### Implementation Steps
 1. Extract domain from target URL using: `domain=$(echo "$url" | sed 's|https\?://||' | cut -d'/' -f1)`
-2. Create `/reports/{domain}/` directory
+2. Create `reports/{domain}/` directory
 3. Generate all report files with consistent naming
 4. Include scan summary with target URL, scan date, alert breakdown, and recommendations
 
@@ -32,7 +33,9 @@ For each scan, generate the following reports in the target subdirectory:
 - Use domain name for directory (e.g., `example.com`, `api.service.com`)
 - Use underscore-separated naming for files (e.g., `example_com_security_report.html`)
 - Replace dots with underscores in filenames to avoid confusion
-- Keep consistent prefixes based on domain name### ZAP API Endpoints for Reports
+- Keep consistent prefixes based on domain name
+
+### ZAP API Endpoints for Reports
 - HTML: `http://localhost:8080/OTHER/core/other/htmlreport/`
 - XML: `http://localhost:8080/OTHER/core/other/xmlreport/`
 - JSON: `http://localhost:8080/OTHER/core/other/jsonreport/`
@@ -47,10 +50,58 @@ Always use `docker compose up -d` to start the ZAP environment:
 
 NEVER manually start individual ZAP containers - always use the docker-compose.yml configuration.
 
+## MCP Server Configuration
+
+### SSE Mode (Recommended)
+The MCP server now runs in SSE (Server-Sent Events) mode for better integration with modern AI interfaces:
+
+**Cursor Configuration** (`.cursor/mcp.json`):
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "http",
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+**VS Code Configuration** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "http", 
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+### Legacy STDIO Mode (Fallback)
+If SSE mode fails, fallback to STDIO mode:
+
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["exec", "-i", "owasp-zap-mcp", "python", "-m", "owasp_zap_mcp.main"],
+      "env": {
+        "ZAP_BASE_URL": "http://zap:8080",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
+```
+
 ## Troubleshooting & Fallback Strategies
 
-### When MCP Health Check Fails
-If `zap_health_check` fails, follow this escalation path IMMEDIATELY (don't spend time troubleshooting MCP):
+### When MCP Tools Fail
+If MCP tools fail (e.g., `zap_health_check` returns errors), follow this escalation path IMMEDIATELY:
 
 1. **Quick ZAP Verification** (30 seconds max):
    ```bash
@@ -62,62 +113,123 @@ If `zap_health_check` fails, follow this escalation path IMMEDIATELY (don't spen
 2. **Container Status Check**:
    ```bash
    docker ps | grep -E "(zap|owasp)"
+   docker logs owasp-zap-mcp --tail 20
    ```
    Both `zap` and `owasp-zap-mcp` containers should be running and healthy.
 
-3. **If ZAP responds but MCP doesn't**: Use direct ZAP API calls (see Fallback Commands below)
+3. **MCP Server Health Check**:
+   ```bash
+   curl -s http://localhost:3000/health
+   curl -s http://localhost:3000/status
+   ```
+
+4. **If ZAP responds but MCP doesn't**: Use direct ZAP API calls (see Fallback Commands below)
 
 ### Fallback Commands (Direct ZAP API)
 When MCP is unresponsive but ZAP is working, use these direct API calls:
 
-#### Spider Scan
+#### Complete Scan Workflow
 ```bash
-# Start spider scan
-SCAN_ID=$(curl -s "http://localhost:8080/JSON/spider/action/scan/?url=${TARGET_URL}&maxChildren=10&recurse=true" | jq -r '.scan')
+# Set target URL
+TARGET_URL="https://example.com"
 
-# Check status (0-100%)
-curl -s "http://localhost:8080/JSON/spider/view/status/?scanId=${SCAN_ID}"
-```
-
-#### Active Security Scan
-```bash
-# Start active scan (after spider completes)
-ASCAN_ID=$(curl -s "http://localhost:8080/JSON/ascan/action/scan/?url=${TARGET_URL}&recurse=true" | jq -r '.scan')
-
-# Check status (0-100%)
-curl -s "http://localhost:8080/JSON/ascan/view/status/?scanId=${ASCAN_ID}"
-```
-
-#### Generate Reports
-```bash
 # Extract domain for directory structure
 DOMAIN=$(echo "$TARGET_URL" | sed 's|https\?://||' | cut -d'/' -f1)
 mkdir -p "reports/${DOMAIN}"
 
+# Start spider scan
+echo "Starting spider scan for $TARGET_URL..."
+SCAN_ID=$(curl -s "http://localhost:8080/JSON/spider/action/scan/?url=${TARGET_URL}&maxChildren=10&recurse=true" | jq -r '.scan')
+
+# Wait for spider to complete
+while true; do
+    STATUS=$(curl -s "http://localhost:8080/JSON/spider/view/status/?scanId=${SCAN_ID}" | jq -r '.status')
+    echo "Spider scan progress: ${STATUS}%"
+    if [ "$STATUS" = "100" ]; then
+        break
+    fi
+    sleep 5
+done
+
+# Start active scan
+echo "Starting active security scan..."
+ASCAN_ID=$(curl -s "http://localhost:8080/JSON/ascan/action/scan/?url=${TARGET_URL}&recurse=true" | jq -r '.scan')
+
+# Monitor active scan (can generate reports while running)
+echo "Active scan started with ID: $ASCAN_ID"
+echo "Generating reports with current findings..."
+
 # Generate all required reports
-curl -s "http://localhost:8080/OTHER/core/other/htmlreport/" > "reports/${DOMAIN}/${DOMAIN//./_}_security_report.html"
-curl -s "http://localhost:8080/OTHER/core/other/xmlreport/" > "reports/${DOMAIN}/${DOMAIN//./_}_security_report.xml"
-curl -s "http://localhost:8080/OTHER/core/other/jsonreport/" > "reports/${DOMAIN}/${DOMAIN//./_}_security_report.json"
-curl -s "http://localhost:8080/JSON/core/view/alerts/" > "reports/${DOMAIN}/${DOMAIN//./_}_alerts_summary.json"
+DOMAIN_UNDERSCORE=$(echo "$DOMAIN" | sed 's/\./_/g')
+
+curl -s "http://localhost:8080/OTHER/core/other/htmlreport/" > "reports/${DOMAIN}/${DOMAIN_UNDERSCORE}_security_report.html"
+curl -s "http://localhost:8080/OTHER/core/other/xmlreport/" > "reports/${DOMAIN}/${DOMAIN_UNDERSCORE}_security_report.xml"
+curl -s "http://localhost:8080/OTHER/core/other/jsonreport/" > "reports/${DOMAIN}/${DOMAIN_UNDERSCORE}_security_report.json"
+curl -s "http://localhost:8080/JSON/core/view/alerts/" > "reports/${DOMAIN}/${DOMAIN_UNDERSCORE}_alerts_summary.json"
+
+# Generate scan summary
+cat > "reports/${DOMAIN}/${DOMAIN_UNDERSCORE}_scan_summary.md" << EOF
+# Security Scan Report for ${DOMAIN}
+
+**Scan Date:** $(date)
+**Target:** ${TARGET_URL}
+**Scanner:** OWASP ZAP $(curl -s http://localhost:8080/JSON/core/view/version/ | jq -r '.version')
+
+## Scan Status
+- Spider Scan: ✅ Complete (100%)
+- Active Scan: 🔄 In Progress
+- Total Alerts: $(curl -s "http://localhost:8080/JSON/core/view/numberOfAlerts/" | jq -r '.numberOfAlerts')
+
+## Report Files
+1. ${DOMAIN_UNDERSCORE}_security_report.html - Detailed HTML report
+2. ${DOMAIN_UNDERSCORE}_security_report.xml - XML format report
+3. ${DOMAIN_UNDERSCORE}_security_report.json - JSON format report
+4. ${DOMAIN_UNDERSCORE}_alerts_summary.json - Alerts data
+5. ${DOMAIN_UNDERSCORE}_scan_summary.md - This summary
+
+EOF
+
+echo "Reports generated in reports/${DOMAIN}/"
+ls -la "reports/${DOMAIN}/"
 ```
 
 ### Decision Tree: MCP vs Direct API
 - **Use MCP first**: Always try MCP tools initially
-- **Switch to direct API if**: Health check fails OR any MCP command times out
+- **Switch to direct API if**: Health check fails OR any MCP command times out OR tool execution errors
 - **Don't troubleshoot MCP**: If ZAP responds directly, just use the API
 - **Time limit**: Don't spend more than 2 minutes on MCP troubleshooting
 
 ### Common Issues & Quick Fixes
-- **MCP timeout**: Container networking issue - use direct API
-- **"ZAP not responding"**: Check if ZAP container is actually running
+- **MCP tool execution errors**: Tool registration issue - use direct API
+- **SSE connection issues**: Check if port 3000 is accessible
+- **Container networking**: Ensure docker-compose networking is working
 - **Empty reports**: Ensure scans completed before generating reports
 - **Permission errors**: Check Docker container permissions and volumes
 
 ### Example Directory Structure
 ```
 reports/
-└── httpbin.org/
-    ├── httpbin_org_security_report.html
-    ├── httpbin_org_security_summary.json
-    └── httpbin_org_security_report.md
+├── httpbin.org/
+│   ├── httpbin_io_security_report.html
+│   ├── httpbin_io_security_report.xml
+│   ├── httpbin_io_security_report.json
+│   ├── httpbin_io_alerts_summary.json
+│   ├── httpbin_io_scan_summary.md
+│   └── httpbin_io_scan_status.md
+└── example.com/
+    ├── example_com_security_report.html
+    ├── example_com_security_report.xml
+    ├── example_com_security_report.json
+    ├── example_com_alerts_summary.json
+    └── example_com_scan_summary.md
 ```
+
+## Best Practices
+
+1. **Always follow directory structure**: Reports MUST go in `reports/{domain}/`
+2. **Use consistent naming**: Replace dots with underscores in filenames
+3. **Generate all report formats**: HTML, XML, JSON, and summary
+4. **Include scan metadata**: Date, target, scanner version, status
+5. **Monitor scan progress**: Don't wait for completion to generate initial reports
+6. **Use fallback strategy**: Switch to direct API if MCP fails
+7. **Document findings**: Include executive summary and recommendations

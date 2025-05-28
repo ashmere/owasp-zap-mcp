@@ -5,7 +5,7 @@ FROM python:3.12-slim
 
 LABEL maintainer="ZAP-MCP-Tooling Team"
 LABEL description="OWASP ZAP MCP Server - Native MCP server for security scanning"
-LABEL version="0.1.0"
+LABEL version=""
 
 # Set working directory
 WORKDIR /app

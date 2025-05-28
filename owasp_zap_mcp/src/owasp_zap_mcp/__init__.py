@@ -13,7 +13,7 @@ associated with, endorsed by, or affiliated with the OWASP Foundation or the
 OWASP ZAP project. OWASP and ZAP are trademarks of the OWASP Foundation.
 """
 
-__version__ = "0.1.0"
+__version__ = ""
 __author__ = "ZAP-MCP-Tooling Team"
 __description__ = "Native MCP server for OWASP ZAP security scanning"
 

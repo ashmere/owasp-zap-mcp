@@ -1,6 +1,6 @@
-# OWASP ZAP MCP Tooling
+# OWASP ZAP MCP Server
 
-A comprehensive toolkit for integrating OWASP ZAP security scanning with AI-powered development workflows through the Model Context Protocol (MCP). This implementation follows Apache Doris MCP server patterns for robust, production-ready integration.
+A comprehensive Model Context Protocol (MCP) server for integrating OWASP ZAP security scanning with AI-powered development workflows. This implementation provides seamless security testing capabilities through modern AI interfaces like Cursor IDE.
 
 > **Disclaimer**: This project is an independent implementation and is not officially associated with, endorsed by, or affiliated with the OWASP Foundation or the OWASP ZAP project. OWASP and ZAP are trademarks of the OWASP Foundation.
 
@@ -9,10 +9,11 @@ A comprehensive toolkit for integrating OWASP ZAP security scanning with AI-powe
 - 🔒 **Security Scanning**: Spider scans, active scans, and vulnerability detection
 - 🕷️ **Content Discovery**: Automated web application crawling and mapping  
 - 🎯 **Targeted Analysis**: Risk-based alert filtering and comprehensive reporting
-- 📊 **Multiple Formats**: HTML and JSON report generation
+- 📊 **Multiple Formats**: HTML, XML, and JSON report generation
 - 🔄 **Session Management**: Clear and manage ZAP scanning sessions
-- 🚀 **Multiple Transports**: Support for both stdio and SSE/HTTP protocols
-- 🤖 **AI Integration**: Native Cursor IDE integration via MCP protocol
+- 🚀 **SSE Mode**: Server-Sent Events for modern AI integration
+- 🤖 **AI Integration**: Native Cursor IDE and VS Code integration via MCP protocol
+- 📁 **Organized Reports**: Automatic report organization by domain
 
 ## Architecture
 
@@ -22,30 +23,36 @@ This project provides a native MCP server implementation that bridges AI models 
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Cursor IDE    │◄──►│ owasp_zap_mcp   │◄──►│   OWASP ZAP     │
 │                 │    │                 │    │                 │
-│ - MCP Client    │    │ - Native MCP    │    │ - REST API      │
+│ - MCP Client    │    │ - SSE Server    │    │ - REST API      │
 │ - AI Assistant  │    │ - ZAP Tools     │    │ - Scanner       │
-│ - Code Analysis │    │ - Stdio I/O     │    │ - Proxy         │
+│ - Code Analysis │    │ - HTTP/3000     │    │ - Proxy/8080    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## Project Structure
 
 ```
-zap-mcp-tooling/
+owasp-zap-mcp/
 ├── owasp_zap_mcp/              # Main MCP server implementation
 │   ├── src/owasp_zap_mcp/      # Source code
 │   │   ├── config.py           # Environment-based configuration
-│   │   ├── mcp_core.py         # Core MCP instance for stdio mode
-│   │   ├── main.py             # SSE/HTTP mode entry point
+│   │   ├── main.py             # Entry point with SSE/stdio modes
+│   │   ├── sse_server.py       # SSE server implementation
 │   │   ├── zap_client.py       # ZAP API client implementation
 │   │   └── tools/              # Tool implementations
-│   ├── pyproject.toml          # Project configuration and entry points
+│   ├── pyproject.toml          # Project configuration and dependencies
 │   ├── requirements.txt        # Python dependencies
 │   ├── Dockerfile             # Container configuration
-│   └── README.md              # Detailed implementation docs
+│   └── README.md              # Implementation documentation
 ├── docker-compose.yml         # Service orchestration
-├── .cursor/mcp.json          # Cursor IDE MCP configuration
-└── README.md                 # This file
+├── .cursor/                   # Cursor IDE configuration
+│   ├── mcp.json              # MCP server configuration
+│   └── rules/                # Scanning rules and guidelines
+├── .vscode/                  # VS Code configuration
+│   └── mcp.json             # MCP server configuration
+├── reports/                  # Organized scan reports by domain
+├── docs/                     # Documentation
+└── README.md                # This file
 ```
 
 ## Quick Start
@@ -53,7 +60,7 @@ zap-mcp-tooling/
 ### Prerequisites
 
 - Docker and Docker Compose
-- Cursor IDE (or other MCP-compatible client)
+- Cursor IDE or VS Code (with MCP support)
 - Python 3.12+ (for local development)
 
 ### 1. Start Services
@@ -61,7 +68,7 @@ zap-mcp-tooling/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd zap-mcp-tooling
+cd owasp-zap-mcp
 
 # Start all services
 docker compose up -d
@@ -76,13 +83,43 @@ docker compose ps
 # Test ZAP connectivity
 curl http://localhost:8080/JSON/core/view/version/
 
+# Test MCP server
+curl http://localhost:3000/health
+curl http://localhost:3000/status
+
 # Check MCP server logs
 docker compose logs owasp-zap-mcp
 ```
 
-### 3. Configure Cursor IDE
+### 3. Configure Your IDE
 
-The MCP server is pre-configured in `.cursor/mcp.json`. Simply open this directory in Cursor IDE and start using security scanning tools through AI chat.
+#### Cursor IDE
+The MCP server is pre-configured in `.cursor/mcp.json`:
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "http",
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+#### VS Code
+The MCP server is pre-configured in `.vscode/mcp.json`:
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "http",
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+Simply open this directory in your IDE and start using security scanning tools through AI chat.
 
 ## Available Tools
 
@@ -103,23 +140,46 @@ The MCP server provides 10 security scanning tools:
 
 ## Usage Examples
 
-### With Cursor IDE
+### With AI Assistant
 
 Simply ask your AI assistant:
 
 - "Please check if ZAP is running and ready for security testing"
-- "Run a spider scan on <https://example.com>"
+- "Run a spider scan on https://example.com"
 - "Show me all high-risk security alerts"
 - "Generate a security report for the last scan"
+- "Perform a complete security scan of https://mysite.com"
+
+### Report Organization
+
+All scan reports are automatically organized by domain:
+
+```
+reports/
+├── example.com/
+│   ├── example_com_security_report.html
+│   ├── example_com_security_report.xml
+│   ├── example_com_security_report.json
+│   ├── example_com_alerts_summary.json
+│   ├── example_com_scan_summary.md
+│   └── example_com_scan_status.md
+└── httpbin.org/
+    ├── httpbin_io_security_report.html
+    ├── httpbin_io_security_report.xml
+    ├── httpbin_io_security_report.json
+    ├── httpbin_io_alerts_summary.json
+    ├── httpbin_io_scan_summary.md
+    └── httpbin_io_scan_status.md
+```
 
 ### Direct CLI Usage
 
 ```bash
-# Start the MCP server directly
-docker exec -it owasp-zap-mcp owasp-zap-mcp
-
-# Or run in SSE mode for web integration
+# Start the MCP server in SSE mode (default)
 docker exec -it owasp-zap-mcp python -m owasp_zap_mcp.main --sse
+
+# Or start in stdio mode for legacy compatibility
+docker exec -it owasp-zap-mcp python -m owasp_zap_mcp.main
 ```
 
 ## Configuration
@@ -155,8 +215,11 @@ cd owasp_zap_mcp
 # Install in development mode
 pip install -e .
 
-# Run the server
-owasp-zap-mcp
+# Run the server in SSE mode
+python -m owasp_zap_mcp.main --sse
+
+# Or run in stdio mode
+python -m owasp_zap_mcp.main
 ```
 
 ### Adding New Tools
@@ -190,12 +253,22 @@ flake8 src/
 
 2. **MCP Tools Not Available**:
    - Check MCP server logs: `docker compose logs owasp-zap-mcp`
-   - Verify Cursor MCP configuration in `.cursor/mcp.json`
-   - Restart Cursor IDE if needed
+   - Verify IDE MCP configuration
+   - Test SSE endpoint: `curl http://localhost:3000/sse`
+   - Restart your IDE if needed
 
-3. **Container Issues**:
+3. **SSE Connection Issues**:
+   - Verify port 3000 is accessible: `curl http://localhost:3000/health`
+   - Check firewall settings
+   - Ensure containers are on the same network
+
+4. **Container Issues**:
    - Rebuild containers: `docker compose build --no-cache`
    - Reset everything: `docker compose down -v && docker compose up -d`
+
+### Fallback Strategy
+
+If MCP tools fail, you can use direct ZAP API calls. See `.cursor/rules/owasp_zap_scanning.mdc` for complete fallback commands and troubleshooting procedures.
 
 ### Useful Commands
 
@@ -211,6 +284,11 @@ docker compose down
 
 # Clean rebuild
 docker compose down -v && docker compose build --no-cache && docker compose up -d
+
+# Test endpoints
+curl http://localhost:8080/JSON/core/view/version/  # ZAP API
+curl http://localhost:3000/health                   # MCP Health
+curl http://localhost:3000/status                   # MCP Status
 ```
 
 ## Security Considerations
@@ -219,14 +297,16 @@ docker compose down -v && docker compose build --no-cache && docker compose up -
 - Containers communicate over isolated Docker network
 - No sensitive data is exposed to host system by default
 - ZAP web interface is exposed on localhost:8080 for debugging (can be disabled)
+- MCP server runs on localhost:3000 for AI integration
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Follow the existing code patterns (based on Apache Doris MCP server)
+3. Follow the existing code patterns
 4. Add tests for new functionality
-5. Submit a pull request
+5. Update documentation as needed
+6. Submit a pull request
 
 ## License
 
@@ -234,13 +314,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Apache Doris MCP Server for architectural patterns and best practices
 - OWASP ZAP team for the excellent security testing tool
 - Model Context Protocol specification for standardized AI tool integration
 - Cursor team for MCP integration and AI-powered development workflows
+- Apache Doris MCP Server for architectural inspiration
 
 ---
 
-**Version**: 0.1.0  
-**Status**: Active Development  
-**Compatibility**: Cursor IDE, MCP 1.0+
+**Version**: 0.2.0  
+**Status**: Production Ready  
+**Compatibility**: Cursor IDE, VS Code, MCP 1.0+

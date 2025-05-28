@@ -41,12 +41,12 @@ services:
       - SERVER_PORT=3000
     networks:
       - zap-network
-    # For stdio mode (default)
-    command: ["owasp-zap-mcp"]
-    # For SSE mode, uncomment the following:
-    # ports:
-    #   - "3000:3000"
-    # command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
+    # For SSE mode
+    ports:
+      - "3000:3000"
+    command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
+    # For stdio mode (commented out)
+    # command: ["owasp-zap-mcp"]
     stdin_open: true
     tty: true
     healthcheck:
