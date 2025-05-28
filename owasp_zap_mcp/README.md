@@ -196,7 +196,7 @@ If you're upgrading from the previous implementation:
    ```bash
    # Old way
    python run.py
-   
+
    # New way
    owasp-zap-mcp
    ```
