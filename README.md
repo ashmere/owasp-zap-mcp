@@ -108,7 +108,7 @@ The MCP server provides 10 security scanning tools:
 Simply ask your AI assistant:
 
 - "Please check if ZAP is running and ready for security testing"
-- "Run a spider scan on https://example.com"
+- "Run a spider scan on <https://example.com>"
 - "Show me all high-risk security alerts"
 - "Generate a security report for the last scan"
 

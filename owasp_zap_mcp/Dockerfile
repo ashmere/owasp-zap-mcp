@@ -11,7 +11,7 @@ LABEL version="0.1.0"
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -42,4 +42,4 @@ CMD ["owasp-zap-mcp"]
 
 # Alternative commands:
 # For stdio mode: docker run owasp-zap-mcp owasp-zap-mcp
-# For SSE mode: docker run -p 3000:3000 owasp-zap-mcp python -m owasp_zap_mcp.main --sse 
+# For SSE mode: docker run -p 3000:3000 owasp-zap-mcp python -m owasp_zap_mcp.main --sse
