@@ -1,0 +1,12 @@
+{
+  "name": "OWASP ZAP MCP DevContainer",
+  "image": "mcr.microsoft.com/devcontainers/universal:linux",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "remoteEnv": { 
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "SOURCE_SOCKET": "${localEnv:DOCKER_HOST}"
+  },
+  "postCreateCommand": "docker --version"
+}
