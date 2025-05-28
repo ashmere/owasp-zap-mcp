@@ -41,8 +41,8 @@ owasp_zap_mcp/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd owasp_zap_mcp
+git clone https://github.com/ashmere/owasp-zap-mcp.git
+cd owasp-zap-mcp/owasp_zap_mcp
 
 # Install in development mode
 pip install -e .
@@ -118,7 +118,7 @@ docker-compose up -d
 
 ## Available Tools
 
-The server provides 11 security scanning tools:
+The server provides 10 security scanning tools:
 
 | Tool | Description |
 |------|-------------|
@@ -137,6 +137,18 @@ The server provides 11 security scanning tools:
 
 Add to your `.cursor/mcp.json`:
 
+```json
+{
+  "servers": {
+    "owasp-zap-security": {
+      "type": "http",
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+For stdio mode (legacy):
 ```json
 {
   "mcpServers": {
@@ -250,3 +262,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Apache Doris MCP Server for architectural patterns
 - OWASP ZAP team for the security scanning engine
 - Model Context Protocol specification
+
+---
+
+**Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
+**Project**: [owasp-zap-mcp](https://github.com/ashmere/owasp-zap-mcp)

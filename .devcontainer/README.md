@@ -1,173 +1,109 @@
-# DevContainer Setup for OWASP ZAP MCP
+# OWASP ZAP MCP Development Environment
 
-This devcontainer provides a complete development environment for the OWASP ZAP MCP server with proper file permissions and Docker integration.
+This directory contains the development container configuration for the OWASP ZAP MCP project. The new design eliminates code duplication and complex permission management while providing flexible development options.
 
-## Features
+## Architecture
 
-- ✅ **Proper File Permissions**: Files can be saved and edited without permission issues
-- ✅ **Docker Integration**: Full Docker access from within the container
-- ✅ **Port Forwarding**: Automatic forwarding of ZAP (8080) and MCP (3000) ports
-- ✅ **Python Environment**: Pre-configured Python with formatting and linting
-- ✅ **Service Integration**: Automatic startup of ZAP and MCP services
+The development environment uses **Docker Compose profiles** to provide different deployment scenarios:
+
+- **`dev` profile**: Host-based development (recommended)
+- **`devcontainer` profile**: Container-based development (optional)
+- **`services` profile**: Production/testing deployment
 
 ## Quick Start
 
-1. **Open in DevContainer**
-   ```bash
-   # In Cursor/VS Code, use Command Palette:
-   # "Dev Containers: Reopen in Container"
-   ```
+### Option 1: Host Development (Recommended)
 
-2. **Verify Setup**
-   ```bash
-   # Check file permissions
-   ls -la /workspace
-   
-   # Check Docker access
-   docker --version
-   docker ps
-   
-   # Check services
-   docker compose ps
-   ```
+This is the fastest and most flexible approach:
 
-3. **Start Services** (if not auto-started)
-   ```bash
-   docker compose up -d
-   ```
+```bash
+# One-time setup
+./scripts/dev-setup.sh
 
-## File Structure
+# Daily workflow
+./scripts/dev-start.sh
+cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 
-```
-.devcontainer/
-├── devcontainer.json       # Main devcontainer configuration
-├── docker-compose.yml      # Service definitions
-└── README.md              # This file
+# When done
+./scripts/dev-stop.sh
 ```
 
-## Configuration Details
+### Option 2: DevContainer Development
 
-### Workspace Mounting
-- **Host**: `${localWorkspaceFolder}` 
-- **Container**: `/workspace`
-- **Type**: Bind mount with cached consistency
-- **Permissions**: Owned by `codespace` user
+If you prefer container-based development:
 
-### User Configuration
-- **User**: `codespace` (non-root)
-- **UID**: Automatically updated to match host
-- **Permissions**: Full read/write access to workspace
+1. Open the project in VS Code
+2. Use "Reopen in Container" command
+3. The devcontainer will automatically start ZAP
+4. Run the MCP server: `cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse`
 
-### Port Forwarding
-- **3000**: MCP Server (auto-notify)
-- **8080**: ZAP API (auto-notify)  
-- **8090**: ZAP Web UI (ignored)
+## Benefits of New Design
+
+✅ **Zero Code Duplication**: Single `docker-compose.yml` with profiles  
+✅ **No Permission Issues**: Host development uses native permissions  
+✅ **Simpler Setup**: Just `docker compose --profile dev up -d zap`  
+✅ **Faster Development**: No container overhead for code changes  
+✅ **Better IDE Integration**: Native file watching, debugging, etc.  
+✅ **Flexible**: Can use devcontainer if preferred  
+
+## Available Services
+
+- **ZAP API**: http://localhost:8080
+- **ZAP Web UI**: http://localhost:8090  
+- **MCP Server**: http://localhost:3000 (when running locally)
+
+## Docker Compose Profiles
+
+### Development Profile (`dev`)
+```bash
+docker compose --profile dev up -d zap
+```
+Starts only ZAP for host-based development.
+
+### DevContainer Profile (`devcontainer`)
+```bash
+docker compose --profile devcontainer up -d
+```
+Starts ZAP + development container.
+
+### Services Profile (`services`)
+```bash
+docker compose --profile services up -d
+```
+Starts ZAP + MCP server for production/testing.
+
+## Migration from Old Setup
+
+The old setup had these issues:
+- ❌ Duplicate docker-compose files
+- ❌ Complex permission management scripts
+- ❌ Container-in-container complexity
+
+The new setup eliminates all these problems while maintaining the same functionality.
 
 ## Troubleshooting
 
-### File Permission Issues
-
-If you still can't save files:
-
+### ZAP not starting
 ```bash
-# Check current permissions
-ls -la /workspace
-
-# Fix permissions manually
-sudo chown -R codespace:codespace /workspace
-sudo chmod -R 755 /workspace
-
-# Verify fix
-touch /workspace/test.txt
-echo "test" > /workspace/test.txt
-rm /workspace/test.txt
-```
-
-### Docker Access Issues
-
-```bash
-# Check Docker daemon
-docker --version
-docker info
-
-# Check Docker socket permissions
-ls -la /var/run/docker.sock
-
-# Test Docker functionality
-docker run hello-world
-```
-
-### Service Startup Issues
-
-```bash
-# Check service status
-docker compose ps
-
-# View service logs
 docker compose logs zap
-docker compose logs owasp-zap-mcp
-
-# Restart services
-docker compose restart
-
-# Full rebuild
-docker compose down
-docker compose build --no-cache
-docker compose up -d
 ```
 
-### MCP Integration Issues
+### Permission issues
+With host development, you use native file permissions - no special setup needed!
 
-```bash
-# Test MCP server
-curl http://localhost:3000/health
-curl http://localhost:3000/status
-
-# Test ZAP API
-curl http://localhost:8080/JSON/core/view/version/
-
-# Check MCP configuration
-cat /workspace/.cursor/mcp.json
-cat /workspace/.vscode/mcp.json
-```
+### Port conflicts
+Make sure ports 8080, 8090, and 3000 are available.
 
 ## Development Workflow
 
-1. **Edit Files**: All files in `/workspace` are editable with proper permissions
-2. **Run Commands**: Use integrated terminal for Docker and Python commands
-3. **Test Changes**: Services auto-reload on code changes
-4. **Debug**: Use VS Code debugging with Python extension
+1. **Start environment**: `./scripts/dev-start.sh`
+2. **Develop**: Edit code with your favorite editor
+3. **Test**: `cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse`
+4. **Stop**: `./scripts/dev-stop.sh`
 
-## Environment Variables
-
-The devcontainer sets up these environment variables:
-
-```bash
-LOCAL_WORKSPACE_FOLDER=/workspace
-PYTHONPATH=/workspace
-```
-
-## Extensions
-
-Pre-installed VS Code extensions:
-- Python support with IntelliSense
-- Black formatter for code formatting
-- Flake8 for linting
-- JSON support for configuration files
-
-## Performance Tips
-
-- **File Watching**: Reports directory excluded from file watching
-- **Cached Mounts**: Workspace uses cached consistency for better performance
-- **Network Mode**: Host networking for optimal container communication
-
-## Security Notes
-
-- Container runs as non-root `codespace` user
-- Docker socket mounted for Docker-in-Docker functionality
-- No sensitive data exposed outside container
-- Services isolated on Docker network
+No complex permission fixes or container rebuilds needed!
 
 ---
 
-If you continue to experience issues, please check the main project README.md for additional troubleshooting steps. 
+**Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
+**Project**: [owasp-zap-mcp](https://github.com/ashmere/owasp-zap-mcp)

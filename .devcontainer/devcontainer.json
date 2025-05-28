@@ -1,24 +1,24 @@
 {
-  "name": "OWASP ZAP MCP DevContainer",
+  "name": "OWASP ZAP MCP Development",
   
-  // Use docker-compose for better integration
-  "dockerComposeFile": "docker-compose.yml",
+  // Use the main docker-compose.yml with devcontainer profile
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
+  "shutdownAction": "none",
   
-  // User configuration for proper permissions
-  "remoteUser": "codespace",
-  "updateRemoteUserUID": true,
+  // Only start ZAP by default (MCP server runs locally for development)
+  "runServices": ["zap"],
   
-  // Port forwarding for MCP server and ZAP
+  // Port forwarding
   "forwardPorts": [3000, 8080, 8090],
   "portsAttributes": {
     "3000": {
-      "label": "MCP Server",
+      "label": "MCP Server (Local)",
       "onAutoForward": "notify"
     },
     "8080": {
-      "label": "ZAP API", 
+      "label": "ZAP API",
       "onAutoForward": "notify"
     },
     "8090": {
@@ -27,12 +27,9 @@
     }
   },
   
-  // Post-create setup
-  "postCreateCommand": "sudo chown -R codespace:codespace /workspace && docker --version && ls -la /workspace",
-  
-  // Lifecycle scripts
-  "initializeCommand": "docker --version",
-  //"postStartCommand": "docker compose -f docker-compose.yml up -d zap owasp-zap-mcp",
+  // Setup commands
+  "postCreateCommand": "cd owasp_zap_mcp && pip install -e . && echo '✅ Development environment ready! Run: cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse'",
+  "initializeCommand": "docker compose --profile devcontainer up -d zap",
   
   // VS Code settings
   "customizations": {
@@ -44,12 +41,13 @@
           "**/reports/**": true,
           "**/__pycache__/**": true
         },
-        "python.defaultInterpreterPath": "/usr/local/python/current/bin/python",
-        "python.formatting.provider": "black"
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "terminal.integrated.defaultProfile.linux": "bash"
       },
       "extensions": [
         "ms-python.python",
-        "ms-python.flake8", 
+        "ms-python.flake8",
         "ms-python.black-formatter",
         "ms-vscode.vscode-json"
       ]

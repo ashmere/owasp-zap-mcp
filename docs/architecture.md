@@ -98,6 +98,69 @@ The OWASP ZAP MCP Server is a Model Context Protocol (MCP) implementation that b
 └─────────────────────────────────────────────┘
 ```
 
+## Development Architecture
+
+### Docker Compose Profiles
+
+The project uses Docker Compose profiles for different deployment scenarios:
+
+```yaml
+# Development Profile (dev)
+docker compose --profile dev up -d zap
+
+# DevContainer Profile (devcontainer) 
+docker compose --profile devcontainer up -d
+
+# Production Profile (services)
+docker compose --profile services up -d
+```
+
+### Development Workflow Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Host Development (Recommended)                │
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐                    │
+│  │ Native IDE      │    │ Development     │                    │
+│  │                 │    │ Scripts         │                    │
+│  │ - Cursor/VS Code│    │                 │                    │
+│  │ - Native Debug  │    │ - dev-setup.sh  │                    │
+│  │ - File Watching │    │ - dev-start.sh  │                    │
+│  │ - No Containers │    │ - dev-stop.sh   │                    │
+│  └─────────────────┘    └─────────────────┘                    │
+│                                   │                             │
+│                                   ▼                             │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │              Docker (ZAP Only)                              │ │
+│  │                                                             │ │
+│  │  ┌─────────────────┐                                       │ │
+│  │  │      ZAP        │  Profile: dev                         │ │
+│  │  │                 │  Command: docker compose --profile    │ │
+│  │  │ Port: 8080      │           dev up -d zap               │ │
+│  │  │ Network: host   │                                       │ │
+│  │  └─────────────────┘                                       │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   Container Development (Optional)               │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │                    DevContainer                             │ │
+│  │                                                             │ │
+│  │  ┌─────────────────┐    ┌─────────────────┐                │ │
+│  │  │ Dev Container   │    │      ZAP        │                │ │
+│  │  │                 │    │                 │                │ │
+│  │  │ - Python 3.12   │    │ - Scanner       │                │ │
+│  │  │ - VS Code       │    │ - API Server    │                │ │
+│  │  │ - Workspace     │    │ - Port: 8080    │                │ │
+│  │  │ - Docker Socket │    │                 │                │ │
+│  │  └─────────────────┘    └─────────────────┘                │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## Component Details
 
 ### 1. MCP Server (owasp-zap-mcp)
@@ -168,25 +231,37 @@ zap.sh -daemon -host 0.0.0.0 -port 8080 \
 
 ### 3. Container Orchestration
 
-#### Docker Compose Services
+#### Docker Compose Services with Profiles
 
-**ZAP Service**
+**ZAP Service (All Profiles)**
 ```yaml
 zap:
   image: zaproxy/zap-stable:latest
+  profiles: ["services", "dev", "devcontainer"]
   ports: ["8080:8080", "8090:8090"]
   healthcheck: curl -f http://localhost:8080/JSON/core/view/version/
   networks: [zap-network]
 ```
 
-**MCP Server Service**
+**MCP Server Service (Production Only)**
 ```yaml
 owasp-zap-mcp:
   build: ./owasp_zap_mcp
+  profiles: ["services"]  # Only for production/testing
   ports: ["3000:3000"]
   depends_on: [zap]
   command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
   networks: [zap-network]
+```
+
+**DevContainer Service (Development Only)**
+```yaml
+devcontainer:
+  image: mcr.microsoft.com/devcontainers/python:3.12
+  profiles: ["devcontainer"]
+  volumes: [".:/workspace:cached", "/var/run/docker.sock:/var/run/docker.sock"]
+  working_dir: /workspace
+  network_mode: host
 ```
 
 ## Communication Protocols
@@ -334,6 +409,10 @@ Developer Machine
 ├── Docker Desktop
 ├── Cursor IDE / VS Code
 ├── Git Repository
+├── Development Scripts
+│   ├── dev-setup.sh
+│   ├── dev-start.sh
+│   └── dev-stop.sh
 └── Local Testing
 ```
 
@@ -559,5 +638,8 @@ logger.info("Tool executed", extra={
 - Compliance tracking
 
 ---
+
+**Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
+**Project**: [owasp-zap-mcp](https://github.com/ashmere/owasp-zap-mcp)
 
 This architecture provides a robust, scalable foundation for AI-powered security testing while maintaining security best practices and operational simplicity. 

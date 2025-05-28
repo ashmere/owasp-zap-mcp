@@ -2,6 +2,7 @@
 
 A comprehensive Model Context Protocol (MCP) server for integrating OWASP ZAP security scanning with AI-powered development workflows. This implementation provides seamless security testing capabilities through modern AI interfaces like Cursor IDE.
 
+> **Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
 > **Disclaimer**: This project is an independent implementation and is not officially associated with, endorsed by, or affiliated with the OWASP Foundation or the OWASP ZAP project. OWASP and ZAP are trademarks of the OWASP Foundation.
 
 ## Features
@@ -29,33 +30,58 @@ This project provides a native MCP server implementation that bridges AI models 
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## Project Structure
+## Development
 
-```
-owasp-zap-mcp/
-├── owasp_zap_mcp/              # Main MCP server implementation
-│   ├── src/owasp_zap_mcp/      # Source code
-│   │   ├── config.py           # Environment-based configuration
-│   │   ├── main.py             # Entry point with SSE/stdio modes
-│   │   ├── sse_server.py       # SSE server implementation
-│   │   ├── zap_client.py       # ZAP API client implementation
-│   │   └── tools/              # Tool implementations
-│   ├── pyproject.toml          # Project configuration and dependencies
-│   ├── requirements.txt        # Python dependencies
-│   ├── Dockerfile             # Container configuration
-│   └── README.md              # Implementation documentation
-├── docker-compose.yml         # Service orchestration
-├── .cursor/                   # Cursor IDE configuration
-│   ├── mcp.json              # MCP server configuration
-│   └── rules/                # Scanning rules and guidelines
-├── .vscode/                  # VS Code configuration
-│   └── mcp.json             # MCP server configuration
-├── reports/                  # Organized scan reports by domain
-├── docs/                     # Documentation
-└── README.md                # This file
+### Quick Start (Recommended)
+
+The fastest way to get started with development:
+
+```bash
+# One-time setup
+./scripts/dev-setup.sh
+
+# Daily workflow
+./scripts/dev-start.sh
+cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
+
+# When done
+./scripts/dev-stop.sh
 ```
 
-## Quick Start
+### Development Options
+
+#### 1. Host Development (Recommended)
+- **Fastest**: No container overhead
+- **Native permissions**: No file permission issues
+- **Better IDE integration**: Native debugging and file watching
+- **Simple setup**: Just start ZAP, develop on host
+
+#### 2. DevContainer Development
+- **Consistent environment**: Same setup for all developers
+- **Isolated**: Doesn't affect host system
+- **VS Code integration**: Built-in devcontainer support
+
+```bash
+# Open in VS Code and use "Reopen in Container"
+# Or manually:
+docker compose --profile devcontainer up -d
+```
+
+### Docker Compose Profiles
+
+- **`dev`**: Host development (ZAP only)
+- **`devcontainer`**: Container development (ZAP + dev container)
+- **`services`**: Production deployment (ZAP + MCP server)
+
+### Architecture Benefits
+
+✅ **Zero Code Duplication**: Single docker-compose.yml with profiles  
+✅ **No Permission Issues**: Host development uses native permissions  
+✅ **Simpler Setup**: One command to start development environment  
+✅ **Flexible**: Choose host or container development  
+✅ **Better Performance**: No container overhead for development  
+
+## Installation
 
 ### Prerequisites
 
@@ -67,7 +93,7 @@ owasp-zap-mcp/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/ashmere/owasp-zap-mcp.git
 cd owasp-zap-mcp
 
 # Start all services
@@ -205,41 +231,37 @@ zap.sh -daemon -host 0.0.0.0 -port 8080 \
        -config api.disablekey=true
 ```
 
-## Development
+## Project Structure
 
-### Local Development
-
-```bash
-cd owasp_zap_mcp
-
-# Install in development mode
-pip install -e .
-
-# Run the server in SSE mode
-python -m owasp_zap_mcp.main --sse
-
-# Or run in stdio mode
-python -m owasp_zap_mcp.main
 ```
-
-### Adding New Tools
-
-1. Implement the tool function in `src/owasp_zap_mcp/tools/zap_tools.py`
-2. Register the tool in `src/owasp_zap_mcp/tools/tool_initializer.py`
-3. Follow existing patterns for error handling and response formatting
-
-### Testing
-
-```bash
-# Install development dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Code formatting
-black src/
-flake8 src/
+owasp-zap-mcp/
+├── owasp_zap_mcp/              # Main MCP server implementation
+│   ├── src/owasp_zap_mcp/      # Source code
+│   │   ├── config.py           # Environment-based configuration
+│   │   ├── main.py             # Entry point with SSE/stdio modes
+│   │   ├── sse_server.py       # SSE server implementation
+│   │   ├── zap_client.py       # ZAP API client implementation
+│   │   └── tools/              # Tool implementations
+│   ├── pyproject.toml          # Project configuration and dependencies
+│   ├── requirements.txt        # Python dependencies
+│   ├── Dockerfile             # Container configuration
+│   └── README.md              # Implementation documentation
+├── docker-compose.yml         # Service orchestration with profiles
+├── scripts/                   # Development workflow scripts
+│   ├── dev-setup.sh          # One-time development setup
+│   ├── dev-start.sh          # Start development environment
+│   └── dev-stop.sh           # Stop development environment
+├── .devcontainer/            # DevContainer configuration
+│   ├── devcontainer.json     # Simplified devcontainer setup
+│   └── README.md            # DevContainer documentation
+├── .cursor/                  # Cursor IDE configuration
+│   ├── mcp.json             # MCP server configuration
+│   └── rules/               # Scanning rules and guidelines
+├── .vscode/                 # VS Code configuration
+│   └── mcp.json            # MCP server configuration
+├── reports/                 # Organized scan reports by domain
+├── docs/                    # Documentation
+└── README.md               # This file
 ```
 
 ## Troubleshooting
@@ -321,6 +343,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Version**: 0.2.0  
-**Status**: Production Ready  
+**Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
 **Compatibility**: Cursor IDE, VS Code, MCP 1.0+

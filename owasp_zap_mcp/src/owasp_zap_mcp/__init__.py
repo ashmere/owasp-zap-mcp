@@ -4,18 +4,21 @@
 """
 OWASP ZAP MCP Server
 
-A native Model Context Protocol (MCP) server for OWASP ZAP security scanning.
-Enables AI-driven security testing through direct integration with Cursor IDE
-and other MCP-compatible clients.
+A Model Context Protocol (MCP) server for OWASP ZAP security scanning integration.
+Provides AI-powered security testing capabilities through modern development environments.
 
-DISCLAIMER: This project is an independent implementation and is not officially
-associated with, endorsed by, or affiliated with the OWASP Foundation or the
-OWASP ZAP project. OWASP and ZAP are trademarks of the OWASP Foundation.
+Author: Mat Davies (@ashmere)
+Project: https://github.com/ashmere/owasp-zap-mcp
 """
 
-__version__ = ""
-__author__ = "ZAP-MCP-Tooling Team"
-__description__ = "Native MCP server for OWASP ZAP security scanning"
+__version__ = "0.2.0"
+__title__ = "owasp-zap-mcp"
+__description__ = "OWASP ZAP MCP Server for AI-powered security testing"
+__url__ = "https://github.com/ashmere/owasp-zap-mcp"
+__author__ = "Mat Davies"
+__author_email__ = "mat.davies@ashmere.dev"
+__license__ = "MIT"
+__copyright__ = "Copyright 2024 Mat Davies"
 
 from . import tools
 from .config import load_config
@@ -23,4 +26,13 @@ from .config import load_config
 # Import main components
 from .zap_client import ZAPClient
 
-__all__ = ["ZAPClient", "load_config", "tools"]
+__all__ = [
+    "__version__",
+    "__title__", 
+    "__description__",
+    "__url__",
+    "__author__",
+    "__author_email__",
+    "__license__",
+    "__copyright__",
+]
