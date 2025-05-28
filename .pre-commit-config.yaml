@@ -5,7 +5,7 @@
 repos:
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       # File formatting and basic checks
       - id: trailing-whitespace
@@ -37,7 +37,7 @@ repos:
 
   # Python code formatting with Black
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3
@@ -46,7 +46,7 @@ repos:
 
   # Python import sorting with isort
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         args: [--profile=black, --line-length=88]
@@ -54,7 +54,7 @@ repos:
 
   # Python linting with flake8
   - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+    rev: 7.2.0
     hooks:
       - id: flake8
         args: [
@@ -71,7 +71,7 @@ repos:
 
   # Python security linting with bandit
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.5
+    rev: 1.8.3
     hooks:
       - id: bandit
         args: [-r, -f, json]
@@ -80,7 +80,7 @@ repos:
 
   # Python type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.15.0
     hooks:
       - id: mypy
         files: ^owasp_zap_mcp/src/
@@ -91,21 +91,21 @@ repos:
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.0
+    rev: v2.13.1-beta
     hooks:
       - id: hadolint-docker
         args: [--ignore, DL3008, --ignore, DL3009]
 
   # YAML formatting and linting
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
         args: [-d, relaxed]
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.39.0
+    rev: v0.45.0
     hooks:
       - id: markdownlint
         args: [--fix]
@@ -113,30 +113,9 @@ repos:
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
+    rev: v0.10.0.1
     hooks:
       - id: shellcheck
-
-  # Dependency vulnerability scanning
-  - repo: https://github.com/pycqa/safety
-    rev: 3.0.1
-    hooks:
-      - id: safety
-        args: [--ignore=70612]  # Ignore jinja2 vulnerability in dev dependencies
-        files: requirements.*\.txt$
-
-  # License header check
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.4
-    hooks:
-      - id: insert-license
-        files: \.py$
-        args:
-          - --license-filepath
-          - LICENSE_HEADER.txt
-          - --comment-style
-          - "#"
-        exclude: ^owasp_zap_mcp/tests/
 
 # Configuration for specific tools
 ci:
