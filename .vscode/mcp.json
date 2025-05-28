@@ -1,13 +1,8 @@
 {
   "servers": {
     "owasp-zap-security": {
-      "type": "stdio",
-      "command": "docker",
-      "args": ["exec", "-i", "owasp-zap-mcp", "owasp-zap-mcp"],
-      "env": {
-        "ZAP_BASE_URL": "http://zap:8080",
-        "LOG_LEVEL": "INFO"
-      }
+      "type": "http",
+      "url": "http://localhost:3000/sse"
     }
   }
 }

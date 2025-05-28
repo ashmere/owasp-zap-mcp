@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 ZAP-MCP Security Testing Environment
+Copyright (c) 2024 Mat Davies
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,11 +31,12 @@ This project incorporates the following third-party components:
 - **Source**: https://github.com/zaproxy/zaproxy
 - **Description**: Open-source web application security scanner
 
-### ZAP-MCP
+### ZAP-MCP (Inspiration)
 - **License**: MIT License
 - **Source**: https://github.com/ajtazer/ZAP-MCP
 - **Description**: Model Context Protocol integration for OWASP ZAP
 - **Author**: ajtazer
+- **Note**: This project was inspired by the original ZAP-MCP implementation
 
 ### Python Dependencies
 Various Python packages used in this project are subject to their respective licenses:

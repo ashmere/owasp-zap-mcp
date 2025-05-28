@@ -1,11 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
 OWASP ZAP MCP Tools Implementation
 
-Core tool implementations for OWASP ZAP security scanning operations.
-These functions are called by the MCP tool wrappers.
+This module contains all the ZAP security scanning tools available through the MCP interface.
 """
 
 import asyncio

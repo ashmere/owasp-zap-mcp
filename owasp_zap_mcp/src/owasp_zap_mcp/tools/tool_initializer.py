@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-Tool Initialization Module
+OWASP ZAP MCP Tool Initializer
 
-Centralized initialization of all OWASP ZAP tools, ensuring they are correctly registered with MCP
+This module handles the initialization and registration of ZAP tools for the MCP server.
 """
 
 import json
