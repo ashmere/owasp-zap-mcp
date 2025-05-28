@@ -56,8 +56,8 @@ The OWASP ZAP MCP Server is a Model Context Protocol (MCP) implementation that b
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │ │
 │  │  │   Spider    │  │ Active Scan │  │    Proxy Engine     │ │ │
 │  │  │             │  │             │  │                     │ │ │
-│  │  │ - Discovery │  │ - Vuln Test │  │ - Traffic Capture   │ │ │
-│  │  │ - Crawling  │  │ - Injection │  │ - Request/Response  │ │ │
+│  │  │ - Discovery │  │ - Injection │  │ - Request/Response  │ │ │
+│  │  │ - Crawling  │  │ - Analysis  │  │ - Session Handling  │ │ │
 │  │  │ - Mapping   │  │ - Analysis  │  │ - Session Handling  │ │ │
 │  │  └─────────────┘  └─────────────┘  └─────────────────────┘ │ │
 │  │                                                             │ │
@@ -108,7 +108,7 @@ The project uses Docker Compose profiles for different deployment scenarios:
 # Development Profile (dev)
 docker compose --profile dev up -d zap
 
-# DevContainer Profile (devcontainer) 
+# DevContainer Profile (devcontainer)
 docker compose --profile devcontainer up -d
 
 # Production Profile (services)
@@ -167,26 +167,30 @@ docker compose --profile services up -d
 
 #### Core Components
 
-**SSE Server (`sse_server.py`)**
+#### SSE Server (`sse_server.py`)
+
 - FastAPI-based HTTP server
-- Server-Sent Events (SSE) endpoint at `/sse`
-- Session management with UUID tracking
+- Server-Sent Events (SSE) implementation
+- Session management and client tracking
 - WebSocket-like bidirectional communication over HTTP
 - Health and status endpoints
 
-**MCP Protocol Handler**
+#### MCP Protocol Handler
+
 - Implements MCP 1.0 specification
 - Handles `initialize`, `tools/list`, `tools/call` methods
 - Session lifecycle management
 - Error handling and response formatting
 
-**Tool Registry**
+#### Tool Registry
+
 - Dynamic tool registration system
 - 10 security scanning tools
 - Input validation and sanitization
 - Consistent error handling patterns
 
-**ZAP Client (`zap_client.py`)**
+#### ZAP Client (`zap_client.py`)
+
 - HTTP client for ZAP REST API
 - Connection pooling and retry logic
 - Response parsing and validation
@@ -201,7 +205,7 @@ class ZAPTool:
     description: str
     input_schema: dict
     handler: callable
-    
+
 # Tool Categories
 - Health & Status: zap_health_check
 - Scanning: zap_spider_scan, zap_active_scan
@@ -214,6 +218,7 @@ class ZAPTool:
 ### 2. OWASP ZAP Container
 
 #### Configuration
+
 ```bash
 # ZAP Daemon Configuration
 zap.sh -daemon -host 0.0.0.0 -port 8080 \
@@ -223,6 +228,7 @@ zap.sh -daemon -host 0.0.0.0 -port 8080 \
 ```
 
 #### Key Features
+
 - **API Access**: No authentication required (internal network)
 - **Spider Engine**: Content discovery and site mapping
 - **Active Scanner**: Vulnerability detection and testing
@@ -233,7 +239,8 @@ zap.sh -daemon -host 0.0.0.0 -port 8080 \
 
 #### Docker Compose Services with Profiles
 
-**ZAP Service (All Profiles)**
+##### ZAP Service (All Profiles)
+
 ```yaml
 zap:
   image: zaproxy/zap-stable:latest
@@ -243,7 +250,8 @@ zap:
   networks: [zap-network]
 ```
 
-**MCP Server Service (Production Only)**
+##### MCP Server Service (Production Only)
+
 ```yaml
 owasp-zap-mcp:
   build: ./owasp_zap_mcp
@@ -254,7 +262,8 @@ owasp-zap-mcp:
   networks: [zap-network]
 ```
 
-**DevContainer Service (Development Only)**
+##### DevContainer Service (Development Only)
+
 ```yaml
 devcontainer:
   image: mcr.microsoft.com/devcontainers/python:3.12
@@ -269,6 +278,7 @@ devcontainer:
 ### 1. MCP Protocol (AI ↔ MCP Server)
 
 #### Connection Flow
+
 ```
 1. AI Client → HTTP GET /sse
 2. Server → SSE Connection Established
@@ -281,6 +291,7 @@ devcontainer:
 ```
 
 #### Message Format
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -299,6 +310,7 @@ devcontainer:
 ### 2. ZAP API Protocol (MCP Server ↔ ZAP)
 
 #### API Endpoints
+
 ```
 Health:     GET  /JSON/core/view/version/
 Spider:     GET  /JSON/spider/action/scan/
@@ -309,6 +321,7 @@ Reports:    GET  /OTHER/core/other/htmlreport/
 ```
 
 #### Response Handling
+
 ```python
 # Standard ZAP Response
 {
@@ -366,36 +379,42 @@ Reports:    GET  /OTHER/core/other/htmlreport/
 
 ### 1. Network Security
 
-**Container Isolation**
+#### Container Isolation
+
 - Dedicated Docker network (`zap-network`)
 - No direct external access to ZAP
 - MCP server acts as security gateway
 
-**Port Exposure**
+#### Port Exposure
+
 - ZAP: 8080 (localhost only, for debugging)
 - MCP: 3000 (localhost only, for AI integration)
 - No external network exposure
 
 ### 2. API Security
 
-**ZAP Configuration**
+#### ZAP Configuration
+
 - API key disabled (internal network only)
 - Address filtering enabled
 - Daemon mode (no GUI)
 
-**MCP Server**
+#### MCP Server
+
 - Input validation on all tool parameters
 - Error sanitization (no sensitive data leakage)
 - Session isolation
 
 ### 3. Data Security
 
-**Report Organization**
+#### Report Organization
+
 - Domain-based directory structure
 - No cross-domain data leakage
 - Consistent file naming conventions
 
-**Session Management**
+#### Session Management
+
 - UUID-based session tracking
 - Automatic cleanup on disconnect
 - No persistent session storage
@@ -418,17 +437,20 @@ Developer Machine
 
 ### 2. Production Considerations
 
-**Scaling**
+#### Scaling
+
 - Horizontal scaling via multiple MCP server instances
 - Load balancing for high-throughput scanning
 - ZAP cluster configuration for enterprise use
 
-**Monitoring**
+#### Monitoring
+
 - Health check endpoints
 - Structured logging
 - Metrics collection points
 
-**Security Hardening**
+#### Security Hardening
+
 - API key authentication (production)
 - Network policies
 - Resource limits
@@ -455,6 +477,7 @@ MAX_SCAN_DURATION=3600
 ### 2. MCP Client Configuration
 
 **Cursor IDE (`.cursor/mcp.json`)**
+
 ```json
 {
   "servers": {
@@ -467,6 +490,7 @@ MAX_SCAN_DURATION=3600
 ```
 
 **VS Code (`.vscode/mcp.json`)**
+
 ```json
 {
   "servers": {
@@ -482,17 +506,20 @@ MAX_SCAN_DURATION=3600
 
 ### 1. Error Categories
 
-**Connection Errors**
+#### Connection Errors
+
 - ZAP unavailable
 - Network timeouts
 - Container failures
 
-**Protocol Errors**
+#### Protocol Errors
+
 - Invalid MCP messages
 - Malformed requests
 - Version mismatches
 
-**Application Errors**
+#### Application Errors
+
 - Invalid scan parameters
 - ZAP API errors
 - Resource limitations
@@ -516,12 +543,14 @@ MAX_SCAN_DURATION=3600
 
 ### 3. Fallback Strategies
 
-**MCP Failure**
+#### MCP Failure
+
 - Direct ZAP API access
 - Command-line tools
 - Manual scanning procedures
 
-**ZAP Failure**
+#### ZAP Failure
+
 - Health check validation
 - Container restart procedures
 - Alternative scanning tools
@@ -530,29 +559,34 @@ MAX_SCAN_DURATION=3600
 
 ### 1. Optimization Points
 
-**Connection Pooling**
+#### Connection Pooling
+
 - HTTP client connection reuse
 - ZAP API session management
 - Resource cleanup
 
-**Caching**
+#### Caching
+
 - Tool definitions
 - ZAP capabilities
 - Session metadata
 
-**Async Processing**
+#### Async Processing
+
 - Non-blocking I/O
 - Concurrent scan handling
 - Background report generation
 
 ### 2. Resource Limits
 
-**Memory Usage**
+#### Memory Usage
+
 - ZAP: 2GB default heap
 - MCP Server: 512MB typical
 - Report storage: Configurable
 
-**CPU Usage**
+#### CPU Usage
+
 - Scan intensity configuration
 - Concurrent scan limits
 - Background processing
@@ -561,12 +595,14 @@ MAX_SCAN_DURATION=3600
 
 ### 1. Health Checks
 
-**ZAP Health**
+#### ZAP Health
+
 ```bash
 curl http://localhost:8080/JSON/core/view/version/
 ```
 
-**MCP Server Health**
+#### MCP Server Health
+
 ```bash
 curl http://localhost:3000/health
 curl http://localhost:3000/status
@@ -574,7 +610,8 @@ curl http://localhost:3000/status
 
 ### 2. Logging Strategy
 
-**Structured Logging**
+#### Structured Logging
+
 ```python
 logger.info("Tool executed", extra={
     "tool": "zap_spider_scan",
@@ -584,7 +621,8 @@ logger.info("Tool executed", extra={
 })
 ```
 
-**Log Levels**
+#### Log Levels
+
 - ERROR: System failures, critical issues
 - WARN: Recoverable errors, degraded performance
 - INFO: Normal operations, tool executions
@@ -592,7 +630,8 @@ logger.info("Tool executed", extra={
 
 ### 3. Metrics Collection
 
-**Key Metrics**
+#### Key Metrics
+
 - Tool execution count
 - Success/failure rates
 - Response times
@@ -603,36 +642,42 @@ logger.info("Tool executed", extra={
 
 ### 1. Scalability Enhancements
 
-**Multi-ZAP Support**
+#### Multi-ZAP Support
+
 - ZAP cluster management
 - Load balancing
 - Scan distribution
 
-**Cloud Integration**
+#### Cloud Integration
+
 - Container orchestration (Kubernetes)
 - Managed services
 - Auto-scaling
 
 ### 2. Feature Extensions
 
-**Additional Scanners**
+#### Additional Scanners
+
 - Nuclei integration
 - Custom tool support
 - Third-party APIs
 
-**Enhanced Reporting**
+#### Enhanced Reporting
+
 - Real-time dashboards
 - Trend analysis
 - Compliance reporting
 
 ### 3. Security Enhancements
 
-**Authentication**
+#### Authentication
+
 - API key management
 - OAuth integration
 - Role-based access
 
-**Audit Logging**
+#### Audit Logging
+
 - Scan history
 - User activity
 - Compliance tracking
@@ -642,4 +687,4 @@ logger.info("Tool executed", extra={
 **Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
 **Project**: [owasp-zap-mcp](https://github.com/ashmere/owasp-zap-mcp)
 
-This architecture provides a robust, scalable foundation for AI-powered security testing while maintaining security best practices and operational simplicity. 
+This architecture provides a robust, scalable foundation for AI-powered security testing while maintaining security best practices and operational simplicity.

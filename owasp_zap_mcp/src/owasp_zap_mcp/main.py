@@ -32,8 +32,8 @@ from mcp.server.fastmcp import FastMCP
 
 # Config and Tool Initializer
 from .config import SERVER_HOST, SERVER_PORT, load_config
-from .tools.tool_initializer import register_mcp_tools
 from .sse_server import ZAPMCPSseServer
+from .tools.tool_initializer import register_mcp_tools
 
 # Load environment variables (load early for all modes)
 load_dotenv(override=True)

@@ -30,6 +30,20 @@ if [ -f "requirements-dev.txt" ]; then
     pip install -r requirements-dev.txt
 fi
 
+# Set up environment configuration
+echo "⚙️  Setting up environment configuration..."
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo "📝 Created .env from .env.example"
+        echo "💡 Note: .env is configured for local development (ZAP_BASE_URL=http://localhost:8080)"
+    else
+        echo "⚠️  No .env.example found, you may need to set ZAP_BASE_URL=http://localhost:8080 manually"
+    fi
+else
+    echo "📝 .env file already exists"
+fi
+
 # Return to project root
 cd ..
 
@@ -38,7 +52,9 @@ echo ""
 echo "🎯 Next steps:"
 echo "  • ZAP API: http://localhost:8080"
 echo "  • ZAP Web UI: http://localhost:8090"
+echo "  • Environment: .env configured for local development"
 echo "  • Run MCP server: cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse"
 echo "  • Run tests: cd owasp_zap_mcp && pytest"
 echo ""
-echo "🛑 To stop: docker compose --profile dev down" 
+echo "💡 For local development, ZAP_BASE_URL is set to http://localhost:8080"
+echo "🛑 To stop: docker compose --profile dev down"

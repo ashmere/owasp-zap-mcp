@@ -47,7 +47,7 @@ Various Python packages used in this project are subject to their respective lic
 - And others as specified in requirements.txt files
 
 ### Docker Base Images
-- **python:3.11-slim**: Subject to Python Software Foundation License
+- **python:3.12-slim**: Subject to Python Software Foundation License
 - **zaproxy/zap-stable**: Subject to Apache License 2.0
 
 All third-party components retain their original licenses and copyrights.

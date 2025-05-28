@@ -42,6 +42,9 @@ The fastest way to get started with development:
 
 # Daily workflow
 ./scripts/dev-start.sh
+
+# For local development, set the correct ZAP URL
+export ZAP_BASE_URL=http://localhost:8080
 cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 
 # When done
@@ -51,12 +54,14 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 ### Development Options
 
 #### 1. Host Development (Recommended)
+
 - **Fastest**: No container overhead
 - **Native permissions**: No file permission issues
 - **Better IDE integration**: Native debugging and file watching
 - **Simple setup**: Just start ZAP, develop on host
 
 #### 2. DevContainer Development
+
 - **Consistent environment**: Same setup for all developers
 - **Isolated**: Doesn't affect host system
 - **VS Code integration**: Built-in devcontainer support
@@ -120,7 +125,9 @@ docker compose logs owasp-zap-mcp
 ### 3. Configure Your IDE
 
 #### Cursor IDE
+
 The MCP server is pre-configured in `.cursor/mcp.json`:
+
 ```json
 {
   "servers": {
@@ -133,7 +140,9 @@ The MCP server is pre-configured in `.cursor/mcp.json`:
 ```
 
 #### VS Code
+
 The MCP server is pre-configured in `.vscode/mcp.json`:
+
 ```json
 {
   "servers": {
@@ -171,10 +180,10 @@ The MCP server provides 10 security scanning tools:
 Simply ask your AI assistant:
 
 - "Please check if ZAP is running and ready for security testing"
-- "Run a spider scan on https://example.com"
+- "Run a spider scan on <https://example.com>"
 - "Show me all high-risk security alerts"
 - "Generate a security report for the last scan"
-- "Perform a complete security scan of https://mysite.com"
+- "Perform a complete security scan of <https://mysite.com>"
 
 ### Report Organization
 
@@ -212,13 +221,21 @@ docker exec -it owasp-zap-mcp python -m owasp_zap_mcp.main
 
 ### Environment Variables
 
+Copy `.env.example` to `.env` and modify as needed:
+
+```bash
+cp .env.example .env
+```
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LOG_LEVEL` | `INFO` | Logging level |
-| `ZAP_BASE_URL` | `http://zap:8080` | ZAP API base URL |
+| `ZAP_BASE_URL` | `http://localhost:8080` | ZAP API base URL (use `http://localhost:8080` for local development) |
 | `ZAP_API_KEY` | _(empty)_ | ZAP API key (disabled by default) |
 | `SERVER_HOST` | `0.0.0.0` | Server host for SSE mode |
 | `SERVER_PORT` | `3000` | Server port for SSE mode |
+
+**Important**: For local development (host-based), set `ZAP_BASE_URL=http://localhost:8080`. The default `http://zap:8080` is for Docker container communication only.
 
 ### ZAP Configuration
 
@@ -271,6 +288,7 @@ owasp-zap-mcp/
 1. **ZAP Connection Failed**:
    - Ensure ZAP container is healthy: `docker compose ps`
    - Check ZAP logs: `docker compose logs zap`
+   - For local development, verify `ZAP_BASE_URL=http://localhost:8080`
    - Verify network connectivity between containers
 
 2. **MCP Tools Not Available**:

@@ -15,6 +15,7 @@ repos:
         args: [--allow-multiple-documents]
       - id: check-toml
       - id: check-json
+        exclude: ^\.devcontainer/devcontainer\.json$
       - id: check-xml
       - id: check-merge-conflict
       - id: check-case-conflict

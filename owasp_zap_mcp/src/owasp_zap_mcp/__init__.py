@@ -1,11 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-OWASP ZAP MCP Server
+OWASP ZAP MCP Server Package
 
-A Model Context Protocol (MCP) server for OWASP ZAP security scanning integration.
-Provides AI-powered security testing capabilities through modern development environments.
+A Model Context Protocol (MCP) server implementation for integrating OWASP ZAP
+security scanning capabilities with AI-powered development workflows.
 
 Author: Mat Davies (@ashmere)
 Project: https://github.com/ashmere/owasp-zap-mcp
@@ -28,7 +27,7 @@ from .zap_client import ZAPClient
 
 __all__ = [
     "__version__",
-    "__title__", 
+    "__title__",
     "__description__",
     "__url__",
     "__author__",

@@ -12,24 +12,22 @@ LABEL repository="https://github.com/ashmere/owasp-zap-mcp"
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies and the package in one layer
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY . .
 
-# Install the package in development mode
-RUN pip install -e .
-
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash zapuser
+# Install the package in development mode and create non-root user
+RUN pip install -e . && \
+    useradd --create-home --shell /bin/bash zapuser
 USER zapuser
 
 # Expose port for SSE mode

@@ -7,7 +7,7 @@ name = "owasp-zap-mcp"
 version = "0.2.0"
 description = "OWASP ZAP MCP Server for AI-powered security testing (independent implementation)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "Mat Davies", email = "mat.davies@ashmere.dev"}
@@ -23,18 +23,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Security",
     "Topic :: Software Development :: Testing",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
-
-[project.urls]
-Homepage = "https://github.com/ashmere/owasp-zap-mcp"
-Repository = "https://github.com/ashmere/owasp-zap-mcp"
-Issues = "https://github.com/ashmere/owasp-zap-mcp/issues"
-Documentation = "https://github.com/ashmere/owasp-zap-mcp/blob/main/README.md"
 
 dependencies = [
     "mcp[cli]>=1.0.0",
@@ -44,6 +38,12 @@ dependencies = [
     "fastapi>=0.95.0",
     "uvicorn>=0.21.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/ashmere/owasp-zap-mcp"
+Repository = "https://github.com/ashmere/owasp-zap-mcp"
+Issues = "https://github.com/ashmere/owasp-zap-mcp/issues"
+Documentation = "https://github.com/ashmere/owasp-zap-mcp/blob/main/README.md"
 
 [project.optional-dependencies]
 dev = [
@@ -71,7 +71,7 @@ owasp_zap_mcp = ["*.py"]
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(

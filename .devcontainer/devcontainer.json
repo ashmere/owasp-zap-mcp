@@ -1,15 +1,15 @@
 {
   "name": "OWASP ZAP MCP Development",
-  
+
   // Use the main docker-compose.yml with devcontainer profile
   "dockerComposeFile": "../docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
   "shutdownAction": "none",
-  
+
   // Only start ZAP by default (MCP server runs locally for development)
   "runServices": ["zap"],
-  
+
   // Port forwarding
   "forwardPorts": [3000, 8080, 8090],
   "portsAttributes": {
@@ -26,11 +26,11 @@
       "onAutoForward": "ignore"
     }
   },
-  
+
   // Setup commands
   "postCreateCommand": "cd owasp_zap_mcp && pip install -e . && echo '✅ Development environment ready! Run: cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse'",
   "initializeCommand": "docker compose --profile devcontainer up -d zap",
-  
+
   // VS Code settings
   "customizations": {
     "vscode": {

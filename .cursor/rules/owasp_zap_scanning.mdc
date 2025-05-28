@@ -17,7 +17,7 @@ When performing OWASP ZAP security scans, ALWAYS organize reports in subdirector
 ### Required Report Files
 For each scan, generate the following reports in the target subdirectory:
 1. `{domain}_security_report.html` - Comprehensive HTML report
-2. `{domain}_security_report.xml` - XML format report  
+2. `{domain}_security_report.xml` - XML format report
 3. `{domain}_security_report.json` - JSON format report
 4. `{domain}_alerts_summary.json` - Detailed alerts data
 5. `{domain}_scan_summary.md` - Executive summary with key findings
@@ -72,7 +72,7 @@ The MCP server now runs in SSE (Server-Sent Events) mode for better integration 
 {
   "servers": {
     "owasp-zap-security": {
-      "type": "http", 
+      "type": "http",
       "url": "http://localhost:3000/sse"
     }
   }

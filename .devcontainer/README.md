@@ -48,33 +48,40 @@ If you prefer container-based development:
 
 ## Available Services
 
-- **ZAP API**: http://localhost:8080
-- **ZAP Web UI**: http://localhost:8090  
-- **MCP Server**: http://localhost:3000 (when running locally)
+- **ZAP API**: <http://localhost:8080>
+- **ZAP Web UI**: <http://localhost:8090>  
+- **MCP Server**: <http://localhost:3000> (when running locally)
 
 ## Docker Compose Profiles
 
 ### Development Profile (`dev`)
+
 ```bash
 docker compose --profile dev up -d zap
 ```
+
 Starts only ZAP for host-based development.
 
 ### DevContainer Profile (`devcontainer`)
+
 ```bash
 docker compose --profile devcontainer up -d
 ```
+
 Starts ZAP + development container.
 
 ### Services Profile (`services`)
+
 ```bash
 docker compose --profile services up -d
 ```
+
 Starts ZAP + MCP server for production/testing.
 
 ## Migration from Old Setup
 
 The old setup had these issues:
+
 - ❌ Duplicate docker-compose files
 - ❌ Complex permission management scripts
 - ❌ Container-in-container complexity
@@ -84,14 +91,17 @@ The new setup eliminates all these problems while maintaining the same functiona
 ## Troubleshooting
 
 ### ZAP not starting
+
 ```bash
 docker compose logs zap
 ```
 
 ### Permission issues
+
 With host development, you use native file permissions - no special setup needed!
 
 ### Port conflicts
+
 Make sure ports 8080, 8090, and 3000 are available.
 
 ## Development Workflow
