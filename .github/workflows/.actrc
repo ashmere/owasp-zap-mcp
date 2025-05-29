@@ -1,0 +1,17 @@
+# Configuration for act (local GitHub Actions testing)
+# Use this with: act workflow_dispatch
+
+# Use a larger runner image for multi-arch builds
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Docker socket is automatically mounted by act
+
+# Set default secrets for local testing
+-s GITHUB_TOKEN=dummy_token_for_local_testing
+
+# Set default environment variables
+--env GITHUB_REPOSITORY=ashmere/owasp-zap-mcp
+--env GITHUB_ACTOR=local-user
+
+# Enable verbose output
+-v
