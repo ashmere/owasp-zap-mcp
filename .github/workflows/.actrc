@@ -4,7 +4,10 @@
 # Use a larger runner image for multi-arch builds
 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 
-# Docker socket is automatically mounted by act
+# Mount Docker socket for Docker-in-Docker support
+# This allows the workflow to build Docker images
+# Using Colima Docker socket path with proper bind mount
+--bind /Users/mat.davies/.colima/qemu-amd64/docker.sock:/var/run/docker.sock
 
 # Set default secrets for local testing
 -s GITHUB_TOKEN=dummy_token_for_local_testing

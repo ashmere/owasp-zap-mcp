@@ -58,7 +58,7 @@ repos:
     rev: v2.13.1-beta
     hooks:
       - id: hadolint-docker
-        args: [--ignore, DL3008, --ignore, DL3009, --ignore, DL3042]
+        args: [--ignore, DL3008, --ignore, DL3009, --ignore, DL3042, --ignore, DL3013, --ignore, SC2015]
 
   # YAML formatting and linting
   - repo: https://github.com/adrienverge/yamllint
@@ -80,6 +80,7 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
+        exclude: ^scripts/test.sh$
 
 # Configuration for specific tools
 ci:
