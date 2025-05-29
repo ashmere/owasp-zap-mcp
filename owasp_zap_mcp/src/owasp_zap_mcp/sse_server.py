@@ -430,7 +430,7 @@ class ZAPMCPSseServer:
 
                 try:
                     # Execute the tool
-                    result = await self.call_tool(tool_name, arguments)
+                    result = await self.call_tool(tool_name, arguments, request)
 
                     # Format result properly for MCP
                     if (
@@ -542,11 +542,14 @@ class ZAPMCPSseServer:
                 },
             )
 
-    async def call_tool(self, tool_name, arguments):
+    async def call_tool(self, tool_name, arguments, request):
         """Call a tool and return the result."""
         logger.info(
             f"Calling tool: {tool_name}, Arguments: {json.dumps(arguments, ensure_ascii=False)}"
         )
+
+        # Get recent query content, used to handle random_string parameter
+        recent_query = self._extract_recent_query(request)
 
         # Handle tool name mapping - our tools use mcp_ prefix
         tool_mapping = {
@@ -565,11 +568,8 @@ class ZAPMCPSseServer:
         # Map tool name to internal function name
         mapped_tool_name = tool_mapping.get(tool_name, tool_name)
 
-        # Process arguments - handle random_string parameter if present
-        processed_args = dict(arguments)
-        if "random_string" in processed_args:
-            # Remove random_string as it's not used by our tools
-            processed_args.pop("random_string", None)
+        # Process common input parameter conversions
+        processed_args = self._process_tool_arguments(mapped_tool_name, arguments, recent_query)
 
         try:
             # First try to import tool functions from our tools module
@@ -647,3 +647,129 @@ class ZAPMCPSseServer:
         except Exception as e:
             logger.error(f"Error in call_tool for {tool_name}: {str(e)}", exc_info=True)
             raise ValueError(f"Tool execution failed: {str(e)}")
+
+    def _extract_recent_query(self, request):
+        """
+        Extract the most recent user query from the request
+        
+        Args:
+            request: Request object
+            
+        Returns:
+            Optional[str]: The most recent user query, or None if not found
+        """
+        try:
+            # Try to extract message history from request body
+            body = None
+            body_bytes = getattr(request, "_body", None)
+            if body_bytes:
+                try:
+                    body = json.loads(body_bytes)
+                except:
+                    pass
+            
+            if not body:
+                body = getattr(request, "_json", {})
+            
+            # Find the most recent user message from message history
+            messages = body.get("params", {}).get("messages", [])
+            if messages:
+                # Iterate messages in reverse to find the most recent user message
+                for msg in reversed(messages):
+                    if msg.get("role") == "user":
+                        return msg.get("content", "")
+            
+            # If not found in message history, try extracting from the original message
+            message = body.get("params", {}).get("message", {})
+            if message and message.get("role") == "user":
+                return message.get("content", "")
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error extracting recent query: {str(e)}")
+            return None
+
+    def _process_tool_arguments(self, tool_name, arguments, recent_query):
+        """
+        Process tool parameters, supporting special handling logic for ZAP tools
+        
+        Args:
+            tool_name: Tool name (MCP internal name, e.g., mcp_zap_...)
+            arguments: Original parameters
+            recent_query: Recent query content
+            
+        Returns:
+            Processed parameter dictionary
+        """
+        # Copy parameters to avoid modifying the original object
+        processed_args = dict(arguments)
+        
+        # Handle potential random_string parameter as fallback
+        if "random_string" in processed_args and tool_name.startswith("mcp_zap_"):
+            random_string = processed_args.pop("random_string", "")
+            logger.debug(f"Processing random_string parameter for tool {tool_name}: '{random_string}'")
+
+            # 1. For tools requiring URL parameter
+            if tool_name in [
+                "mcp_zap_spider_scan", 
+                "mcp_zap_active_scan", 
+                "mcp_zap_scan_summary"
+            ]:
+                if not processed_args.get("url"):
+                    url_fallback = random_string or recent_query
+                    if url_fallback:
+                        # Try to extract URL from the string
+                        import re
+                        # Look for URLs in the string
+                        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+                        url_matches = re.findall(url_pattern, url_fallback)
+                        if url_matches:
+                            url_fallback = url_matches[0]
+                        elif url_fallback and not url_fallback.startswith(('http://', 'https://')):
+                            # If it looks like a domain, add https://
+                            if '.' in url_fallback and ' ' not in url_fallback:
+                                url_fallback = f"https://{url_fallback}"
+                        
+                        if url_fallback:
+                            logger.info(f"Using random_string/recent_query as URL for {tool_name}: {url_fallback}")
+                            processed_args["url"] = url_fallback
+                        else:
+                            logger.warning(f"{tool_name} missing url parameter, and random_string/recent_query is empty or URL cannot be extracted")
+                    else:
+                        logger.warning(f"{tool_name} missing url parameter, and both random_string and recent_query are empty")
+            
+            # 2. For tools requiring scan_id parameter
+            elif tool_name in [
+                "mcp_zap_spider_status", 
+                "mcp_zap_active_scan_status"
+            ]:
+                if not processed_args.get("scan_id"):
+                    scan_id_fallback = random_string
+                    if scan_id_fallback:
+                        # Extract scan ID (usually a number or simple string)
+                        import re
+                        scan_id_match = re.search(r'\b(\d+)\b', scan_id_fallback)
+                        if scan_id_match:
+                            scan_id_fallback = scan_id_match.group(1)
+                        
+                        logger.info(f"Using random_string as scan_id for {tool_name}: {scan_id_fallback}")
+                        processed_args["scan_id"] = scan_id_fallback
+                    else:
+                        logger.warning(f"{tool_name} missing scan_id parameter, and random_string is empty")
+            
+            # 3. For tools requiring risk_level parameter
+            elif tool_name == "mcp_zap_get_alerts":
+                if not processed_args.get("risk_level") and random_string:
+                    # Check if random_string contains a valid risk level
+                    risk_levels = ["High", "Medium", "Low", "Informational"]
+                    for level in risk_levels:
+                        if level.lower() in random_string.lower():
+                            logger.info(f"Using random_string as risk_level for {tool_name}: {level}")
+                            processed_args["risk_level"] = level
+                            break
+            
+            # 4. Tools that don't need additional parameters (health_check, clear_session, generate_reports)
+            else:
+                logger.debug(f"Tool {tool_name} does not require random_string fallback processing.")
+        
+        return processed_args
