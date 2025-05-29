@@ -430,7 +430,7 @@ class ZAPMCPSseServer:
 
                 try:
                     # Execute the tool
-                    result = await self.call_tool(tool_name, arguments, request)
+                    result = await self.call_tool(tool_name, arguments)
 
                     # Format result properly for MCP
                     if (
@@ -542,71 +542,108 @@ class ZAPMCPSseServer:
                 },
             )
 
-    async def call_tool(
-        self, tool_name: str, arguments: Dict[str, Any], request: Request
-    ) -> Any:
-        """Call a tool by name with arguments"""
-        try:
-            logger.info(
-                f"Calling tool: {tool_name}, Arguments: {json.dumps(arguments, ensure_ascii=False)}"
-            )
+    async def call_tool(self, tool_name, arguments):
+        """Call a tool and return the result."""
+        logger.info(
+            f"Calling tool: {tool_name}, Arguments: {json.dumps(arguments, ensure_ascii=False)}"
+        )
 
+        # Handle tool name mapping - our tools use mcp_ prefix
+        tool_mapping = {
+            "zap_health_check": "mcp_zap_health_check",
+            "zap_spider_scan": "mcp_zap_spider_scan",
+            "zap_active_scan": "mcp_zap_active_scan",
+            "zap_spider_status": "mcp_zap_spider_status",
+            "zap_active_scan_status": "mcp_zap_active_scan_status",
+            "zap_get_alerts": "mcp_zap_get_alerts",
+            "zap_generate_html_report": "mcp_zap_generate_html_report",
+            "zap_generate_json_report": "mcp_zap_generate_json_report",
+            "zap_clear_session": "mcp_zap_clear_session",
+            "zap_scan_summary": "mcp_zap_scan_summary",
+        }
+
+        # Map tool name to internal function name
+        mapped_tool_name = tool_mapping.get(tool_name, tool_name)
+
+        # Process arguments - handle random_string parameter if present
+        processed_args = dict(arguments)
+        if "random_string" in processed_args:
+            # Remove random_string as it's not used by our tools
+            processed_args.pop("random_string", None)
+
+        try:
+            # First try to import tool functions from our tools module
+            try:
+                from .tools import zap_tools
+                
+                # Get the corresponding tool function
+                tool_function = getattr(zap_tools, mapped_tool_name, None)
+                
+                if tool_function:
+                    logger.debug(f"Found tool function in zap_tools: {mapped_tool_name}")
+                    # Call the tool function directly
+                    if callable(tool_function):
+                        result = await tool_function(**processed_args)
+                        logger.info(f"Tool {tool_name} executed successfully via direct function call")
+                        return result
+                    else:
+                        raise ValueError(f"Tool function is not callable: {mapped_tool_name}")
+            
+            except (AttributeError, ImportError) as e:
+                logger.debug(f"Could not import tool function {mapped_tool_name}: {str(e)}")
+            
+            # Fallback: Use MCP server's registered tools
+            logger.debug(f"Falling back to MCP server tools for: {tool_name}")
+            
             # Get the list of registered tools from the MCP server
             tools = await self.mcp_server.list_tools()
 
             # Find the tool by name
             tool_instance = None
             for tool in tools:
-                if getattr(tool, "name", None) == tool_name:
+                if getattr(tool, "name", None) == tool_name or getattr(tool, "name", None) == mapped_tool_name:
                     tool_instance = tool
                     break
 
             if not tool_instance:
-                raise ValueError(f"Tool '{tool_name}' not found")
+                raise ValueError(f"Tool '{tool_name}' not found in registered tools")
 
-            # Handle different tool execution patterns
-            try:
-                # Try different execution methods based on the tool type
-                if hasattr(tool_instance, "run"):
-                    logger.debug(f"Calling tool.run() for {tool_name}")
-                    result = await tool_instance.run(**arguments)
-                elif hasattr(tool_instance, "execute"):
-                    logger.debug(f"Calling tool.execute() for {tool_name}")
-                    result = await tool_instance.execute(**arguments)
-                elif hasattr(tool_instance, "call"):
-                    logger.debug(f"Calling tool.call() for {tool_name}")
-                    result = await tool_instance.call(**arguments)
-                elif callable(tool_instance):
-                    logger.debug(f"Calling tool directly for {tool_name}")
-                    result = await tool_instance(**arguments)
-                elif hasattr(tool_instance, "__call__"):
-                    logger.debug(f"Calling tool.__call__() for {tool_name}")
-                    result = await tool_instance.__call__(**arguments)
+            # Handle different tool execution patterns (following Apache Doris pattern)
+            logger.debug(f"Tool instance type: {type(tool_instance)}")
+            logger.debug(f"Tool instance attributes: {dir(tool_instance)}")
+            
+            if callable(tool_instance):
+                logger.debug("Tool instance is callable, calling directly")
+                result = await tool_instance(**processed_args)
+            elif hasattr(tool_instance, 'run'):
+                logger.debug("Tool instance has run method, calling run method")
+                result = await tool_instance.run(**processed_args)
+            elif hasattr(tool_instance, 'execute'):
+                logger.debug("Tool instance has execute method, calling execute method")
+                result = await tool_instance.execute(**processed_args)
+            elif hasattr(tool_instance, 'call'):
+                logger.debug("Tool instance has call method, calling call method")
+                result = await tool_instance.call(**processed_args)
+            elif hasattr(tool_instance, '__call__'):
+                logger.debug("Tool instance has __call__ method, calling __call__ method")
+                result = await tool_instance.__call__(**processed_args)
+            elif hasattr(tool_instance, 'func'):
+                # Try to get the actual function from the tool
+                func = tool_instance.func
+                if callable(func):
+                    logger.debug("Tool instance has func attribute, calling func")
+                    result = await func(**processed_args)
                 else:
-                    # Try to get the actual function from the tool
-                    if hasattr(tool_instance, "func"):
-                        func = tool_instance.func
-                        if callable(func):
-                            logger.debug(f"Calling tool.func for {tool_name}")
-                            result = await func(**arguments)
-                        else:
-                            raise ValueError(
-                                f"Tool.func is not callable for {tool_name}"
-                            )
-                    else:
-                        raise ValueError(
-                            f"Tool '{tool_name}' is not callable and has no recognized execution method"
-                        )
-
-                logger.info(f"Tool {tool_name} executed successfully")
-                return result
-
-            except Exception as e:
-                logger.error(
-                    f"Error executing tool {tool_name}: {str(e)}", exc_info=True
+                    raise ValueError(f"Tool.func is not callable for {tool_name}")
+            else:
+                raise ValueError(
+                    f"Tool '{tool_name}' is not callable and has no recognized execution method. "
+                    f"Available attributes: {dir(tool_instance)}"
                 )
-                raise ValueError(f"Tool execution failed: {str(e)}")
+
+            logger.info(f"Tool {tool_name} executed successfully via MCP server")
+            return result
 
         except Exception as e:
-            logger.error(f"Error in call_tool for {tool_name}: {str(e)}")
-            raise
+            logger.error(f"Error in call_tool for {tool_name}: {str(e)}", exc_info=True)
+            raise ValueError(f"Tool execution failed: {str(e)}")

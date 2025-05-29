@@ -7,6 +7,7 @@ Simplified ZAP API client using the zaproxy library, similar to the working demo
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from zapv2 import ZAPv2
 
@@ -59,13 +60,12 @@ class ZAPClient:
     async def connect(self):
         """Initialize ZAP connection."""
         try:
-            # Initialize ZAP API client
-            self.zap = ZAPv2(apikey=self.api_key, proxies=None)
-
-            # Set the correct API URL
-            if self.base_url.endswith("/"):
-                self.base_url = self.base_url[:-1]
-            self.zap._ZAPv2__base = self.base_url
+            # Initialize ZAP API client with proper proxy configuration
+            # The zapv2 library uses the 'proxies' parameter to determine where ZAP is running
+            self.zap = ZAPv2(
+                apikey=self.api_key,
+                proxies={"http": self.base_url, "https": self.base_url},
+            )
 
             logger.info(f"ZAP client initialized with URL: {self.base_url}")
 
