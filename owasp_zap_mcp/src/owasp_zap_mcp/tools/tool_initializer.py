@@ -35,172 +35,261 @@ async def register_mcp_tools(mcp):
     Args:
         mcp: FastMCP instance
     """
-    logger.info("Starting to register OWASP ZAP MCP tools...")
+    logger.info("=== Starting OWASP ZAP MCP Tool Registration ===")
+    
+    # Tool definition mapping
+    tools_to_register = [
+        {
+            "name": "zap_health_check",
+            "description": "Check if ZAP is running and accessible",
+            "function": mcp_zap_health_check,
+            "parameters": {
+                "type": "object", 
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_spider_scan",
+            "description": "Start a spider scan to discover content on a target URL",
+            "function": mcp_zap_spider_scan,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "Target URL to scan"
+                    },
+                    "max_depth": {
+                        "type": "integer",
+                        "description": "Maximum crawl depth, default 5"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_active_scan",
+            "description": "Start an active security scan on a target URL",
+            "function": mcp_zap_active_scan,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "Target URL to scan"
+                    },
+                    "scan_policy": {
+                        "type": "string",
+                        "description": "Custom scan policy name"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_spider_status",
+            "description": "Get the status of a spider scan",
+            "function": mcp_zap_spider_status,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "scan_id": {
+                        "type": "string",
+                        "description": "ID of the spider scan to check"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_active_scan_status",
+            "description": "Get the status of an active scan",
+            "function": mcp_zap_active_scan_status,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "scan_id": {
+                        "type": "string",
+                        "description": "ID of the active scan to check"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_get_alerts",
+            "description": "Get security alerts from ZAP",
+            "function": mcp_zap_get_alerts,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "risk_level": {
+                        "type": "string",
+                        "description": "Filter by risk level (High, Medium, Low, Informational)"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_generate_html_report",
+            "description": "Generate an HTML security report from ZAP",
+            "function": mcp_zap_generate_html_report,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_generate_json_report",
+            "description": "Generate a JSON security report from ZAP",
+            "function": mcp_zap_generate_json_report,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_clear_session",
+            "description": "Clear ZAP session data",
+            "function": mcp_zap_clear_session,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        },
+        {
+            "name": "zap_scan_summary",
+            "description": "Get a comprehensive scan summary for a URL",
+            "function": mcp_zap_scan_summary,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "Target URL to get summary for"
+                    },
+                    "random_string": {
+                        "type": "string",
+                        "description": "Dummy parameter for no-parameter tools"
+                    }
+                },
+                "required": ["random_string"]
+            }
+        }
+    ]
 
-    try:
-        # Register Tool: Health Check
-        @mcp.tool(
-            "zap_health_check",
-            description="""[Function Description]: Check if OWASP ZAP is running and accessible.
-[Parameter Content]:
-- No parameters required""",
-        )
-        async def zap_health_check_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Check ZAP health status"""
-            return await mcp_zap_health_check()
-
-        # Register Tool: Spider Scan
-        @mcp.tool(
-            "zap_spider_scan",
-            description="""[Function Description]: Start a spider scan to discover content on a target URL.
-[Parameter Content]:
-- url (string) [Required] - Target URL to scan
-- max_depth (integer) [Optional] - Maximum crawl depth, default 5""",
-        )
-        async def zap_spider_scan_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Start spider scan
-
-            The random_string parameter will be processed by the SSE server to extract
-            the URL and other parameters automatically.
-            """
-            # This function signature uses random_string which gets processed by SSE server
-            # The SSE server's _process_tool_arguments will extract URL from random_string
-            # and call the actual function with proper parameters
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Register Tool: Active Scan
-        @mcp.tool(
-            "zap_active_scan",
-            description="""[Function Description]: Start an active security scan on a target URL.
-[Parameter Content]:
-- url (string) [Required] - Target URL to scan
-- scan_policy (string) [Optional] - Custom scan policy name""",
-        )
-        async def zap_active_scan_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Start active security scan
-
-            The random_string parameter will be processed by the SSE server to extract
-            the URL and other parameters automatically.
-            """
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Register Tool: Spider Status
-        @mcp.tool(
-            "zap_spider_status",
-            description="""[Function Description]: Get the status of a spider scan.
-[Parameter Content]:
-- scan_id (string) [Required] - ID of the spider scan to check""",
-        )
-        async def zap_spider_status_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Get spider scan status
-
-            The random_string parameter will be processed by the SSE server to extract
-            the scan_id automatically.
-            """
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Register Tool: Active Scan Status
-        @mcp.tool(
-            "zap_active_scan_status",
-            description="""[Function Description]: Get the status of an active scan.
-[Parameter Content]:
-- scan_id (string) [Required] - ID of the active scan to check""",
-        )
-        async def zap_active_scan_status_tool(
-            random_string: str = "",
-        ) -> Dict[str, Any]:
-            """Wrapper: Get active scan status
-
-            The random_string parameter will be processed by the SSE server to extract
-            the scan_id automatically.
-            """
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Register Tool: Get Alerts
-        @mcp.tool(
-            "zap_get_alerts",
-            description="""[Function Description]: Get security alerts from ZAP.
-[Parameter Content]:
-- risk_level (string) [Optional] - Filter by risk level (High, Medium, Low, Informational)""",
-        )
-        async def zap_get_alerts_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Get security alerts
-
-            The random_string parameter will be processed by the SSE server to extract
-            the risk_level if specified.
-            """
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Register Tool: Generate HTML Report
-        @mcp.tool(
-            "zap_generate_html_report",
-            description="""[Function Description]: Generate an HTML security report from ZAP.
-[Parameter Content]:
-- No parameters required""",
-        )
-        async def zap_generate_html_report_tool(
-            random_string: str = "",
-        ) -> Dict[str, Any]:
-            """Wrapper: Generate HTML report"""
-            return await mcp_zap_generate_html_report()
-
-        # Register Tool: Generate JSON Report
-        @mcp.tool(
-            "zap_generate_json_report",
-            description="""[Function Description]: Generate a JSON security report from ZAP.
-[Parameter Content]:
-- No parameters required""",
-        )
-        async def zap_generate_json_report_tool(
-            random_string: str = "",
-        ) -> Dict[str, Any]:
-            """Wrapper: Generate JSON report"""
-            return await mcp_zap_generate_json_report()
-
-        # Register Tool: Clear Session
-        @mcp.tool(
-            "zap_clear_session",
-            description="""[Function Description]: Clear ZAP session data.
-[Parameter Content]:
-- No parameters required""",
-        )
-        async def zap_clear_session_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Clear ZAP session"""
-            return await mcp_zap_clear_session()
-
-        # Register Tool: Scan Summary
-        @mcp.tool(
-            "zap_scan_summary",
-            description="""[Function Description]: Get a comprehensive scan summary for a URL.
-[Parameter Content]:
-- url (string) [Required] - Target URL to get summary for""",
-        )
-        async def zap_scan_summary_tool(random_string: str = "") -> Dict[str, Any]:
-            """Wrapper: Get scan summary
-
-            The random_string parameter will be processed by the SSE server to extract
-            the URL automatically.
-            """
-            raise RuntimeError(
-                "This wrapper should be called via SSE server parameter processing"
-            )
-
-        # Get tool count
-        tools_count = len(await mcp.list_tools())
-        logger.info(f"Registered all OWASP ZAP MCP tools, total {tools_count} tools")
-        return True
-
-    except Exception as e:
-        logger.error(f"Error registering OWASP ZAP MCP tools: {str(e)}")
-        logger.error(traceback.format_exc())
-        return False
+    # Track registration statistics
+    registered_count = 0
+    failed_count = 0
+    
+    # Register each tool
+    for tool_def in tools_to_register:
+        tool_name = tool_def["name"]
+        logger.debug(f"Registering tool: {tool_name}")
+        
+        try:
+            # Verify function is callable
+            if not callable(tool_def["function"]):
+                raise ValueError(f"Tool function for {tool_name} is not callable")
+            
+            # Register the tool with MCP
+            @mcp.tool(name=tool_name, description=tool_def["description"])
+            async def tool_wrapper(**kwargs):
+                """MCP tool wrapper that defers to SSE server parameter processing"""
+                # This wrapper is called by MCP but actual execution should happen
+                # via the SSE server's call_tool method which handles parameter processing
+                raise RuntimeError(
+                    f"Tool {tool_name} should be called via SSE server parameter processing"
+                )
+            
+            # Store the actual function reference for SSE server access
+            tool_wrapper.actual_function = tool_def["function"]
+            tool_wrapper.parameters = tool_def["parameters"]
+            
+            registered_count += 1
+            logger.debug(f"✅ Successfully registered tool: {tool_name}")
+            
+            # Log parameter schema in debug mode
+            if logger.isEnabledFor(logging.DEBUG):
+                param_names = list(tool_def["parameters"].get("properties", {}).keys())
+                logger.debug(f"   Parameters: {param_names}")
+            
+        except Exception as e:
+            failed_count += 1
+            logger.error(f"❌ Failed to register tool {tool_name}: {e}", exc_info=True)
+            # Continue with other tools even if one fails
+    
+    # Log registration summary
+    total_tools = len(tools_to_register)
+    logger.info(f"=== Tool Registration Summary ===")
+    logger.info(f"Total tools: {total_tools}")
+    logger.info(f"Successfully registered: {registered_count}")
+    logger.info(f"Failed to register: {failed_count}")
+    
+    if failed_count > 0:
+        logger.warning(f"⚠️  {failed_count} tools failed to register")
+    
+    if registered_count == total_tools:
+        logger.info("✅ All tools registered successfully!")
+    elif registered_count > 0:
+        logger.warning(f"⚠️  Partial registration: {registered_count}/{total_tools} tools registered")
+    else:
+        logger.error("❌ No tools were registered successfully!")
+        raise RuntimeError("Tool registration failed completely")
+    
+    # Verify registration by listing tools
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            registered_tools = await mcp.list_tools()
+            tool_names = [getattr(tool, 'name', str(tool)) for tool in registered_tools]
+            logger.debug(f"Verified registered tools: {tool_names}")
+        except Exception as e:
+            logger.warning(f"Could not verify tool registration: {e}")
+    
+    logger.info("=== Tool Registration Complete ===")
+    return registered_count
