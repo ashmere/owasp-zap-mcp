@@ -232,10 +232,14 @@ reports/
 
 ```bash
 # Start the MCP server in SSE mode (default)
-docker exec -it owasp-zap-mcp python -m owasp_zap_mcp.main --sse
+# For security profile (image type):
+docker exec -it owasp-zap-mcp-image python -m owasp_zap_mcp.main --sse
+
+# For build profile (build type):
+docker exec -it owasp-zap-mcp-build python -m owasp_zap_mcp.main --sse
 
 # Or start in stdio mode for legacy compatibility
-docker exec -it owasp-zap-mcp python -m owasp_zap_mcp.main
+docker exec -it owasp-zap-mcp-image python -m owasp_zap_mcp.main
 ```
 
 ## Configuration
@@ -280,14 +284,16 @@ owasp-zap-mcp/
 │   │   ├── sse_server.py       # SSE server implementation
 │   │   ├── zap_client.py       # ZAP API client implementation
 │   │   └── tools/              # Tool implementations
+│   ├── tests/                  # Test suite
 │   ├── pyproject.toml          # Project configuration and dependencies
 │   ├── requirements.txt        # Python dependencies
 │   ├── Dockerfile             # Container configuration
+│   ├── run.py                  # Development runner script
 │   └── README.md              # Implementation documentation
 ├── docker-compose.yml         # Service orchestration with profiles
 ├── scripts/                   # Development workflow scripts
 │   ├── dev-setup.sh          # One-time development setup
-│   ├── start.sh              # Start services with multiple options
+│   ├── start.sh              # Start services with options
 │   ├── stop.sh               # Stop services with auto-detection
 │   ├── rebuild.sh            # Complete rebuild and testing
 │   └── test.sh               # Run comprehensive tests
@@ -299,11 +305,21 @@ owasp-zap-mcp/
 │   └── rules/               # Scanning rules and guidelines
 ├── .vscode/                 # VS Code configuration
 │   └── mcp.json            # MCP server configuration
+├── .github/                 # GitHub Actions workflows
+│   ├── workflows/           # CI/CD pipeline definitions
+│   └── .actrc              # Local testing configuration
 ├── docs/                    # Documentation
 │   ├── scripts.md          # Detailed scripts documentation
 │   ├── docker.md           # Docker configuration and profiles
-│   └── development-tips.ai.md  # AI assistant development guide
+│   ├── development-tips.ai.md  # AI assistant development guide
+│   ├── architecture.md     # System architecture documentation
+│   └── threatmodel.md      # Security threat model
 ├── reports/                 # Organized scan reports by domain
+├── research/                # Research and reference materials
+├── debugging/               # Debugging artifacts and logs
+├── .env.example            # Environment configuration template
+├── .env                    # Local environment configuration
+├── LICENSE                 # MIT license
 └── README.md               # This file
 ```
 
