@@ -45,7 +45,7 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - No parameters required""",
         )
-        async def zap_health_check_tool() -> Dict[str, Any]:
+        async def zap_health_check_tool(random_string: str = "") -> Dict[str, Any]:
             """Wrapper: Check ZAP health status"""
             return await mcp_zap_health_check()
 
@@ -57,9 +57,16 @@ async def register_mcp_tools(mcp):
 - url (string) [Required] - Target URL to scan
 - max_depth (integer) [Optional] - Maximum crawl depth, default 5""",
         )
-        async def zap_spider_scan_tool(url: str, max_depth: int = 5) -> Dict[str, Any]:
-            """Wrapper: Start spider scan"""
-            return await mcp_zap_spider_scan(url=url, max_depth=max_depth)
+        async def zap_spider_scan_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Start spider scan
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the URL and other parameters automatically.
+            """
+            # This function signature uses random_string which gets processed by SSE server
+            # The SSE server's _process_tool_arguments will extract URL from random_string
+            # and call the actual function with proper parameters
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Register Tool: Active Scan
         @mcp.tool(
@@ -69,11 +76,13 @@ async def register_mcp_tools(mcp):
 - url (string) [Required] - Target URL to scan
 - scan_policy (string) [Optional] - Custom scan policy name""",
         )
-        async def zap_active_scan_tool(
-            url: str, scan_policy: Optional[str] = None
-        ) -> Dict[str, Any]:
-            """Wrapper: Start active security scan"""
-            return await mcp_zap_active_scan(url=url, scan_policy=scan_policy)
+        async def zap_active_scan_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Start active security scan
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the URL and other parameters automatically.
+            """
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Register Tool: Spider Status
         @mcp.tool(
@@ -82,9 +91,13 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - scan_id (string) [Required] - ID of the spider scan to check""",
         )
-        async def zap_spider_status_tool(scan_id: str) -> Dict[str, Any]:
-            """Wrapper: Get spider scan status"""
-            return await mcp_zap_spider_status(scan_id=scan_id)
+        async def zap_spider_status_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Get spider scan status
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the scan_id automatically.
+            """
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Register Tool: Active Scan Status
         @mcp.tool(
@@ -93,9 +106,13 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - scan_id (string) [Required] - ID of the active scan to check""",
         )
-        async def zap_active_scan_status_tool(scan_id: str) -> Dict[str, Any]:
-            """Wrapper: Get active scan status"""
-            return await mcp_zap_active_scan_status(scan_id=scan_id)
+        async def zap_active_scan_status_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Get active scan status
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the scan_id automatically.
+            """
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Register Tool: Get Alerts
         @mcp.tool(
@@ -104,11 +121,13 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - risk_level (string) [Optional] - Filter by risk level (High, Medium, Low, Informational)""",
         )
-        async def zap_get_alerts_tool(
-            risk_level: Optional[str] = None,
-        ) -> Dict[str, Any]:
-            """Wrapper: Get security alerts"""
-            return await mcp_zap_get_alerts(risk_level=risk_level)
+        async def zap_get_alerts_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Get security alerts
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the risk_level if specified.
+            """
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Register Tool: Generate HTML Report
         @mcp.tool(
@@ -117,7 +136,7 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - No parameters required""",
         )
-        async def zap_generate_html_report_tool() -> Dict[str, Any]:
+        async def zap_generate_html_report_tool(random_string: str = "") -> Dict[str, Any]:
             """Wrapper: Generate HTML report"""
             return await mcp_zap_generate_html_report()
 
@@ -128,7 +147,7 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - No parameters required""",
         )
-        async def zap_generate_json_report_tool() -> Dict[str, Any]:
+        async def zap_generate_json_report_tool(random_string: str = "") -> Dict[str, Any]:
             """Wrapper: Generate JSON report"""
             return await mcp_zap_generate_json_report()
 
@@ -139,7 +158,7 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - No parameters required""",
         )
-        async def zap_clear_session_tool() -> Dict[str, Any]:
+        async def zap_clear_session_tool(random_string: str = "") -> Dict[str, Any]:
             """Wrapper: Clear ZAP session"""
             return await mcp_zap_clear_session()
 
@@ -150,9 +169,13 @@ async def register_mcp_tools(mcp):
 [Parameter Content]:
 - url (string) [Required] - Target URL to get summary for""",
         )
-        async def zap_scan_summary_tool(url: str) -> Dict[str, Any]:
-            """Wrapper: Get scan summary"""
-            return await mcp_zap_scan_summary(url=url)
+        async def zap_scan_summary_tool(random_string: str = "") -> Dict[str, Any]:
+            """Wrapper: Get scan summary
+            
+            The random_string parameter will be processed by the SSE server to extract
+            the URL automatically.
+            """
+            raise RuntimeError("This wrapper should be called via SSE server parameter processing")
 
         # Get tool count
         tools_count = len(await mcp.list_tools())

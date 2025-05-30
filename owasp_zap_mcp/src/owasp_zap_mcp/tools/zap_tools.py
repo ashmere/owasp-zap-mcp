@@ -10,11 +10,39 @@ import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from ..config import ZAP_API_KEY, ZAP_BASE_URL
 from ..zap_client import ZAPAlert, ZAPClient, ZAPScanStatus
 
 logger = logging.getLogger("owasp-zap-tools")
+
+
+def normalize_url(url_input: str) -> str:
+    """
+    Normalize URL to ensure it has proper protocol
+    
+    Args:
+        url_input: URL in various formats (httpbin.org, https://httpbin.org, etc.)
+        
+    Returns:
+        Normalized URL with protocol
+    """
+    if not url_input:
+        return url_input
+    
+    url_input = url_input.strip()
+    
+    # If it already has a protocol, return as-is
+    if url_input.startswith(('http://', 'https://')):
+        return url_input
+    
+    # If it looks like a domain (contains . and no spaces), add https://
+    if '.' in url_input and ' ' not in url_input and not url_input.startswith('/'):
+        return f"https://{url_input}"
+    
+    # Otherwise, return as-is (might be invalid, but let ZAP handle it)
+    return url_input
 
 
 async def mcp_zap_health_check() -> Dict[str, Any]:
@@ -85,8 +113,13 @@ async def mcp_zap_spider_scan(url: str, max_depth: int = 5) -> Dict[str, Any]:
                 ]
             }
 
+        # Normalize URL to handle various formats
+        normalized_url = normalize_url(url)
+        if normalized_url != url:
+            logger.info(f"URL normalized: {url} -> {normalized_url}")
+
         async with ZAPClient(base_url=ZAP_BASE_URL, api_key=ZAP_API_KEY) as client:
-            scan_id = await client.spider_scan(url, max_depth)
+            scan_id = await client.spider_scan(normalized_url, max_depth)
             return {
                 "content": [
                     {
@@ -94,9 +127,10 @@ async def mcp_zap_spider_scan(url: str, max_depth: int = 5) -> Dict[str, Any]:
                         "text": json.dumps(
                             {
                                 "success": True,
-                                "message": f"✅ Spider scan started for {url}",
+                                "message": f"✅ Spider scan started for {normalized_url}",
                                 "scan_id": scan_id,
-                                "url": url,
+                                "url": normalized_url,
+                                "original_url": url if url != normalized_url else None,
                                 "max_depth": max_depth,
                             }
                         ),
@@ -137,8 +171,13 @@ async def mcp_zap_active_scan(
                 ]
             }
 
+        # Normalize URL to handle various formats
+        normalized_url = normalize_url(url)
+        if normalized_url != url:
+            logger.info(f"URL normalized: {url} -> {normalized_url}")
+
         async with ZAPClient(base_url=ZAP_BASE_URL, api_key=ZAP_API_KEY) as client:
-            scan_id = await client.active_scan(url, scan_policy)
+            scan_id = await client.active_scan(normalized_url, scan_policy)
             return {
                 "content": [
                     {
@@ -146,9 +185,10 @@ async def mcp_zap_active_scan(
                         "text": json.dumps(
                             {
                                 "success": True,
-                                "message": f"✅ Active scan started for {url}",
+                                "message": f"✅ Active scan started for {normalized_url}",
                                 "scan_id": scan_id,
-                                "url": url,
+                                "url": normalized_url,
+                                "original_url": url if url != normalized_url else None,
                                 "scan_policy": scan_policy,
                             }
                         ),
@@ -494,11 +534,16 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
                 ]
             }
 
+        # Normalize URL to handle various formats
+        normalized_url = normalize_url(url)
+        if normalized_url != url:
+            logger.info(f"URL normalized: {url} -> {normalized_url}")
+
         async with ZAPClient(base_url=ZAP_BASE_URL, api_key=ZAP_API_KEY) as client:
             alerts = await client.get_alerts()
 
-            # Filter alerts for the specific URL
-            url_alerts = [alert for alert in alerts if url in alert.url]
+            # Filter alerts for the specific URL (check both original and normalized)
+            url_alerts = [alert for alert in alerts if normalized_url in alert.url or url in alert.url]
 
             if not url_alerts:
                 return {
@@ -508,7 +553,8 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
                             "text": json.dumps(
                                 {
                                     "success": True,
-                                    "url": url,
+                                    "url": normalized_url,
+                                    "original_url": url if url != normalized_url else None,
                                     "total_issues": 0,
                                     "risk_summary": {
                                         "High": 0,
@@ -516,7 +562,7 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
                                         "Low": 0,
                                         "Informational": 0,
                                     },
-                                    "message": f"✅ No security issues found for {url}",
+                                    "message": f"✅ No security issues found for {normalized_url}",
                                 }
                             ),
                         }
@@ -536,10 +582,11 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
                         "text": json.dumps(
                             {
                                 "success": True,
-                                "url": url,
+                                "url": normalized_url,
+                                "original_url": url if url != normalized_url else None,
                                 "total_issues": len(url_alerts),
                                 "risk_summary": risk_counts,
-                                "message": f"🔍 Security Summary for {url}: {len(url_alerts)} total issues",
+                                "message": f"🔍 Security Summary for {normalized_url}: {len(url_alerts)} total issues",
                             }
                         ),
                     }
