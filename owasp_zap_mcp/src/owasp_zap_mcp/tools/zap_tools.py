@@ -21,26 +21,26 @@ logger = logging.getLogger("owasp-zap-tools")
 def normalize_url(url_input: str) -> str:
     """
     Normalize URL to ensure it has proper protocol
-    
+
     Args:
         url_input: URL in various formats (httpbin.org, https://httpbin.org, etc.)
-        
+
     Returns:
         Normalized URL with protocol
     """
     if not url_input:
         return url_input
-    
+
     url_input = url_input.strip()
-    
+
     # If it already has a protocol, return as-is
-    if url_input.startswith(('http://', 'https://')):
+    if url_input.startswith(("http://", "https://")):
         return url_input
-    
+
     # If it looks like a domain (contains . and no spaces), add https://
-    if '.' in url_input and ' ' not in url_input and not url_input.startswith('/'):
+    if "." in url_input and " " not in url_input and not url_input.startswith("/"):
         return f"https://{url_input}"
-    
+
     # Otherwise, return as-is (might be invalid, but let ZAP handle it)
     return url_input
 
@@ -543,7 +543,11 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
             alerts = await client.get_alerts()
 
             # Filter alerts for the specific URL (check both original and normalized)
-            url_alerts = [alert for alert in alerts if normalized_url in alert.url or url in alert.url]
+            url_alerts = [
+                alert
+                for alert in alerts
+                if normalized_url in alert.url or url in alert.url
+            ]
 
             if not url_alerts:
                 return {
@@ -554,7 +558,9 @@ async def mcp_zap_scan_summary(url: str) -> Dict[str, Any]:
                                 {
                                     "success": True,
                                     "url": normalized_url,
-                                    "original_url": url if url != normalized_url else None,
+                                    "original_url": (
+                                        url if url != normalized_url else None
+                                    ),
                                     "total_issues": 0,
                                     "risk_summary": {
                                         "High": 0,

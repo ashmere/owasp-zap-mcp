@@ -40,8 +40,11 @@ class TestZAPClient:
 
             assert zap_client.zap is not None
             mock_zapv2.assert_called_once_with(
-                apikey="test-key", 
-                proxies={'http': 'http://localhost:8080', 'https': 'http://localhost:8080'}
+                apikey="test-key",
+                proxies={
+                    "http": "http://localhost:8080",
+                    "https": "http://localhost:8080",
+                },
             )
 
     @pytest.mark.asyncio
@@ -335,30 +338,36 @@ class TestZAPClient:
     async def test_generate_json_report_with_risk_breakdown(self, zap_client):
         """Test JSON report includes risk breakdown like our implementation."""
         mock_alerts = [
-            ZAPAlert({
-                "name": "High Risk Alert",
-                "risk": "High",
-                "confidence": "High",
-                "description": "High risk description",
-                "url": "https://example.com/",
-                "solution": "Fix high risk issue",
-            }),
-            ZAPAlert({
-                "name": "Medium Risk Alert",
-                "risk": "Medium",
-                "confidence": "High",
-                "description": "Medium risk description",
-                "url": "https://example.com/",
-                "solution": "Fix medium risk issue",
-            }),
-            ZAPAlert({
-                "name": "Informational Alert",
-                "risk": "Informational",
-                "confidence": "Medium",
-                "description": "Informational description",
-                "url": "https://example.com/",
-                "solution": "Review informational finding",
-            }),
+            ZAPAlert(
+                {
+                    "name": "High Risk Alert",
+                    "risk": "High",
+                    "confidence": "High",
+                    "description": "High risk description",
+                    "url": "https://example.com/",
+                    "solution": "Fix high risk issue",
+                }
+            ),
+            ZAPAlert(
+                {
+                    "name": "Medium Risk Alert",
+                    "risk": "Medium",
+                    "confidence": "High",
+                    "description": "Medium risk description",
+                    "url": "https://example.com/",
+                    "solution": "Fix medium risk issue",
+                }
+            ),
+            ZAPAlert(
+                {
+                    "name": "Informational Alert",
+                    "risk": "Informational",
+                    "confidence": "Medium",
+                    "description": "Informational description",
+                    "url": "https://example.com/",
+                    "solution": "Review informational finding",
+                }
+            ),
         ]
 
         with patch.object(zap_client, "get_alerts", return_value=mock_alerts):
@@ -401,7 +410,7 @@ class TestZAPClient:
         # Test what happens when ZAP is not running
         with patch("src.owasp_zap_mcp.zap_client.ZAPv2") as mock_zapv2:
             mock_zapv2.side_effect = Exception("Connection refused")
-            
+
             # This would test connection error handling
             # The actual implementation might vary
             try:
@@ -409,7 +418,7 @@ class TestZAPClient:
             except Exception as e:
                 assert "Connection refused" in str(e)
 
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio
     async def test_scan_timeout_handling(self, zap_client, mock_zap):
         """Test handling of scan timeouts."""
         zap_client.zap = mock_zap
@@ -440,7 +449,7 @@ class TestZAPScanStatus:
     def test_scan_status_finished(self):
         """Test scan status when finished."""
         status = ZAPScanStatus(status="FINISHED", progress=100)
-        
+
         assert status.status == "FINISHED"
         assert status.progress == 100
 
@@ -449,7 +458,7 @@ class TestZAPScanStatus:
         # Test with 0 progress
         status = ZAPScanStatus(status="STARTING", progress=0)
         assert status.progress == 0
-        
+
         # Test with string progress - ZAPScanStatus stores it as-is
         status = ZAPScanStatus(status="RUNNING", progress="50")
         assert status.progress == "50"  # It stores the string as-is
@@ -522,7 +531,7 @@ class TestZAPAlert:
         }
 
         alert = ZAPAlert(alert_data)
-        
+
         # Test that the alert can be converted back to dict (for JSON reports)
         alert_dict = alert.__dict__
         assert alert_dict["name"] == "Test Alert"

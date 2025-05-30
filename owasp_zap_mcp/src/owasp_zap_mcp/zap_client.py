@@ -63,12 +63,15 @@ class ZAPClient:
             # Initialize ZAP API client with the correct base URL
             # Extract host and port from base_url for zapv2 library
             parsed_url = urlparse(self.base_url)
-            host = parsed_url.hostname or 'localhost'
+            host = parsed_url.hostname or "localhost"
             port = parsed_url.port or 8080
-            
+
             self.zap = ZAPv2(
                 apikey=self.api_key,
-                proxies={'http': f'http://{host}:{port}', 'https': f'http://{host}:{port}'}
+                proxies={
+                    "http": f"http://{host}:{port}",
+                    "https": f"http://{host}:{port}",
+                },
             )
 
             logger.info(f"ZAP client initialized with URL: {self.base_url}")

@@ -151,4 +151,4 @@ if [[ "$TYPE" == "image" || "$TYPE" == "build" ]]; then
 fi
 echo ""
 echo "To stop services:"
-echo "  ./scripts/stop.sh" 
+echo "  ./scripts/stop.sh"

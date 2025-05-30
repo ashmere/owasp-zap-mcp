@@ -4,24 +4,24 @@ A comprehensive guide for developing and contributing to the OWASP ZAP MCP (Mode
 
 ## 📋 Table of Contents
 
-- [Quick Start](#quick-start)
-- [Project Overview](#project-overview)
-- [Development Environment Setup](#development-environment-setup)
-- [Testing](#testing)
-- [Development Workflow](#development-workflow)
-- [Architecture & Documentation](#architecture--documentation)
-- [Making Changes](#making-changes)
-- [Performance & Quality](#performance--quality)
-- [Troubleshooting](#troubleshooting)
+- [Quick Start](#-quick-start)
+- [Project Overview](#️-project-overview)
+- [Development Environment Setup](#️-development-environment-setup)
+- [Testing](#-testing)
+- [Making Changes](#-making-changes)
+- [Performance & Quality](#-performance--quality)
+- [Troubleshooting](#-troubleshooting)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - Python 3.11+
 - Git
 
 ### Setup Commands
+
 ```bash
 # Clone and setup
 git clone <repository-url>
@@ -42,6 +42,7 @@ python -m pytest
 ## 🏗️ Project Overview
 
 ### Core Components
+
 - **MCP Server** (`src/owasp_zap_mcp/mcp_core.py`) - Core MCP implementation
 - **SSE Server** (`src/owasp_zap_mcp/sse_server.py`) - HTTP/SSE transport layer
 - **ZAP Client** (`src/owasp_zap_mcp/zap_client.py`) - OWASP ZAP API wrapper
@@ -49,6 +50,7 @@ python -m pytest
 - **Configuration** (`src/owasp_zap_mcp/config.py`) - Environment configuration
 
 ### Project Structure
+
 ```
 owasp-zap-mcp/
 ├── src/owasp_zap_mcp/           # Core application code
@@ -67,6 +69,7 @@ owasp-zap-mcp/
 ## 🛠️ Development Environment Setup
 
 ### Option 1: Docker Development (Recommended)
+
 ```bash
 # Setup development environment
 ./scripts/dev-setup.sh
@@ -79,6 +82,7 @@ owasp-zap-mcp/
 ```
 
 ### Option 2: Local Development
+
 ```bash
 cd owasp_zap_mcp
 pip install -r requirements.txt
@@ -98,12 +102,13 @@ python run.py
 The project has a comprehensive test suite with **135+ tests** covering:
 
 - **Unit Tests** (94) - Individual component testing
-- **Integration Tests** (13) - End-to-end workflows 
+- **Integration Tests** (13) - End-to-end workflows
 - **Error Handling Tests** (28) - Error scenarios and edge cases
 - **Performance Tests** (13) - Concurrency and load testing
 - **SSE Server Tests** (27) - Parameter processing and session management
 
 ### Test Files Structure
+
 ```
 tests/
 ├── test_mcp_tools.py        # MCP tool functions and URL normalization
@@ -120,6 +125,7 @@ tests/
 ### Running Tests
 
 #### Basic Test Execution
+
 ```bash
 cd owasp_zap_mcp
 
@@ -137,6 +143,7 @@ python -m pytest tests/test_mcp_tools.py::TestMCPZAPTools::test_mcp_zap_health_c
 ```
 
 #### Test Categories (Markers)
+
 ```bash
 # Run by category
 python -m pytest -m "mcp"              # MCP functionality tests
@@ -155,6 +162,7 @@ python -m pytest -m "error_handling or performance" --run-performance
 ```
 
 #### Test Coverage
+
 ```bash
 # Run with coverage
 python -m pytest --cov=src/owasp_zap_mcp --cov-report=html --cov-report=term-missing
@@ -183,6 +191,7 @@ python scripts/manual-integration-test.py
 ```
 
 The manual integration test is useful for:
+
 - 🔍 **Debugging MCP interface issues**
 - 🧪 **Manual verification after changes**
 - 🔧 **Testing parameter processing**
@@ -191,6 +200,7 @@ The manual integration test is useful for:
 ### Performance Benchmarks
 
 The test suite includes performance validation with these targets:
+
 - Health check: < 1 second
 - Spider scan start: < 2 seconds  
 - Alert retrieval: < 3 seconds
@@ -226,19 +236,22 @@ The test suite includes performance validation with these targets:
 
 When making changes, consider updating these files:
 
-#### For New Features:
+#### For New Features
+
 - [ ] Core implementation files (`src/owasp_zap_mcp/`)
 - [ ] Test files (`tests/`)
 - [ ] Documentation (`docs/`, `README.md`)
 - [ ] Configuration files if needed
 
-#### For Bug Fixes:
+#### For Bug Fixes
+
 - [ ] Fix implementation
 - [ ] Add regression tests
 - [ ] Update error handling tests
 - [ ] Document the fix
 
-#### For Performance Changes:
+#### For Performance Changes
+
 - [ ] Implementation changes
 - [ ] Performance tests (`tests/test_performance.py`)
 - [ ] Benchmark documentation
@@ -274,6 +287,7 @@ When making changes, consider updating these files:
 ### Common Issues
 
 #### Tests Failing
+
 ```bash
 # Check test environment
 python -m pytest --collect-only
@@ -286,6 +300,7 @@ python -m pytest tests/test_mcp_tools.py::specific_test -v -s
 ```
 
 #### Container Issues
+
 ```bash
 # Check container status
 docker compose ps
@@ -299,6 +314,7 @@ docker compose logs zap
 ```
 
 #### ZAP Connection Issues
+
 ```bash
 # Check ZAP accessibility
 curl http://localhost:8080/JSON/core/view/version/
@@ -308,6 +324,7 @@ docker compose exec owasp-zap-mcp curl http://zap:8080/JSON/core/view/version/
 ```
 
 #### MCP Interface Issues
+
 ```bash
 # Check MCP server health
 curl http://localhost:3000/health
@@ -319,6 +336,7 @@ curl http://localhost:3000/status
 ### Debug Mode
 
 Enable debug logging:
+
 ```bash
 export LOG_LEVEL=DEBUG
 python run.py
@@ -350,4 +368,4 @@ python run.py
 
 ---
 
-*For AI assistants: This guide provides comprehensive information for code changes. Always reference the test suite when modifying code and update relevant documentation. The test files provide excellent examples of usage patterns and expected behaviors.* 
+*For AI assistants: This guide provides comprehensive information for code changes. Always reference the test suite when modifying code and update relevant documentation. The test files provide excellent examples of usage patterns and expected behaviors.*

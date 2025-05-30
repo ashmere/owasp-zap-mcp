@@ -127,6 +127,7 @@ python -m pytest --tb=long
 ### Coverage Areas
 
 #### MCP Tools (`test_mcp_tools.py`)
+
 - ✅ Health check functionality
 - ✅ Spider scan operations
 - ✅ Active scan operations
@@ -139,6 +140,7 @@ python -m pytest --tb=long
 - ✅ Real-world scenarios
 
 #### ZAP Client (`test_zap_client.py`)
+
 - ✅ Connection management
 - ✅ API wrapper functions
 - ✅ Error handling
@@ -146,6 +148,7 @@ python -m pytest --tb=long
 - ✅ Data model validation
 
 #### SSE Server (`test_sse_server.py`)
+
 - ✅ Parameter processing
 - ✅ Tool execution
 - ✅ URL normalization via random_string
@@ -154,6 +157,7 @@ python -m pytest --tb=long
 - ✅ Health and status endpoints
 
 #### Error Scenarios (`test_error_scenarios.py`)
+
 - ✅ Connection failures
 - ✅ API errors
 - ✅ Timeout scenarios
@@ -162,6 +166,7 @@ python -m pytest --tb=long
 - ✅ Edge cases
 
 #### Performance (`test_performance.py`)
+
 - ✅ Concurrent operations
 - ✅ Load testing
 - ✅ Memory usage patterns
@@ -170,6 +175,7 @@ python -m pytest --tb=long
 - ✅ Long-running operations
 
 #### Integration (`test_integration.py`)
+
 - ✅ Complete scan workflows
 - ✅ Multi-tool coordination
 - ✅ Real-world scenarios
@@ -200,6 +206,7 @@ Tests use realistic data based on actual security scans:
 ### GitHub Actions
 
 Tests are automatically run on:
+
 - Pull requests
 - Pushes to main branch
 - Scheduled runs (daily)
@@ -230,6 +237,7 @@ def test_[component]_[action]_[expected_result]():
 ```
 
 Examples:
+
 - `test_mcp_zap_health_check_success()`
 - `test_spider_scan_connection_error()`
 - `test_url_normalization_edge_cases()`
@@ -319,4 +327,4 @@ python -m pytest tests/test_performance.py::TestConcurrentOperations --run-perfo
 
 # Run with timing information
 python -m pytest -m "performance" --run-performance --durations=10
-``` 
+```

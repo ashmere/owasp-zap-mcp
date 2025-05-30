@@ -15,6 +15,7 @@ The OWASP ZAP MCP project uses Docker Compose with multiple profiles to support 
 ### 🔒 **Production/Security Profiles**
 
 #### `security` Profile (Default)
+
 ```bash
 ./scripts/start.sh --type image
 # or
@@ -24,22 +25,26 @@ docker compose --profile security up -d
 **Purpose**: Production-ready security scanning environment
 
 **Components**:
+
 - **ZAP**: `zaproxy/zap-stable:latest` container
 - **MCP Server**: Pre-built `owasp-zap-mcp-image` container
 - **Network**: Isolated `zap-network`
 
 **Use Cases**:
+
 - Security engineers performing scans
 - Production deployments
 - CI/CD pipelines
 - Quick security assessments
 
 **URLs**:
-- ZAP API: http://localhost:8080
-- ZAP Web UI: http://localhost:8090
-- MCP Server: http://localhost:3000
+
+- ZAP API: <http://localhost:8080>
+- ZAP Web UI: <http://localhost:8090>
+- MCP Server: <http://localhost:3000>
 
 #### `services` Profile
+
 ```bash
 docker compose --profile services up -d
 ```
@@ -51,6 +56,7 @@ docker compose --profile services up -d
 ### 🛠️ **Development Profiles**
 
 #### `build-dev` Profile
+
 ```bash
 ./scripts/start.sh --type build
 # or
@@ -60,16 +66,19 @@ docker compose --profile build-dev up -d
 **Purpose**: Test builds from source code
 
 **Components**:
+
 - **ZAP**: `zaproxy/zap-stable:latest` container
 - **MCP Server**: Built from source using `Dockerfile`
 - **Network**: Isolated `zap-network`
 
 **Use Cases**:
+
 - Testing code changes
 - Container build validation
 - Development integration testing
 
 #### `dev` Profile
+
 ```bash
 ./scripts/start.sh --type dev
 # or
@@ -79,16 +88,19 @@ docker compose --profile dev up -d
 **Purpose**: Local development with containerized ZAP
 
 **Components**:
+
 - **ZAP**: `zaproxy/zap-stable:latest` container
 - **Dev Container**: Python development environment
 - **Note**: MCP server runs locally, not in container
 
 **Use Cases**:
+
 - Active development work
 - Testing changes quickly
 - Debugging and profiling
 
 **Workflow**:
+
 ```bash
 # Start ZAP
 ./scripts/start.sh --type dev
@@ -98,6 +110,7 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 ```
 
 #### `devcontainer` Profile
+
 ```bash
 ./scripts/start.sh --type devcontainer
 # or
@@ -107,16 +120,19 @@ docker compose --profile devcontainer up -d
 **Purpose**: Full container development environment
 
 **Components**:
+
 - **ZAP**: `zaproxy/zap-stable:latest` container
 - **Dev Container**: Full development environment with VS Code support
 - **Network**: Access to both container and host networks
 
 **Use Cases**:
+
 - VS Code Dev Container development
 - Consistent development environment
 - Container-based workflows
 
 **Workflow**:
+
 ```bash
 # Start containers
 ./scripts/start.sh --type devcontainer
@@ -181,11 +197,13 @@ DOCKER_DEFAULT_PLATFORM=linux/amd64  # For ARM64 compatibility
 ### **Development vs Production Settings**
 
 #### Development (Local MCP Server)
+
 ```bash
 ZAP_BASE_URL=http://localhost:8080  # Direct host access
 ```
 
 #### Production (Container Communication)
+
 ```bash
 ZAP_BASE_URL=http://zap:8080  # Container-to-container
 ```
@@ -301,6 +319,7 @@ curl http://localhost:3000/status
 ### **Common Issues**
 
 #### Port Conflicts
+
 ```bash
 # Check port usage
 lsof -i :8080 -i :3000 -i :8090
@@ -310,6 +329,7 @@ sudo lsof -ti:8080 | xargs kill -9
 ```
 
 #### ARM64 Platform Issues
+
 ```bash
 # Force rebuild with correct platform
 docker compose build --no-cache --platform linux/amd64
@@ -319,6 +339,7 @@ docker compose config | grep platform
 ```
 
 #### Container Communication
+
 ```bash
 # Test ZAP from MCP container
 docker exec owasp-zap-mcp-image curl http://zap:8080/JSON/core/view/version/
@@ -328,6 +349,7 @@ docker network inspect owasp-zap-mcp_zap-network
 ```
 
 #### Java Memory Issues
+
 ```bash
 # Check Java options in ZAP container
 docker exec zap ps aux | grep java
@@ -339,6 +361,7 @@ docker stats zap
 ### **Debug Commands**
 
 #### Container Status
+
 ```bash
 # List all containers
 docker compose ps
@@ -353,6 +376,7 @@ docker compose logs -f owasp-zap-mcp-image
 ```
 
 #### Network Debugging
+
 ```bash
 # Inspect network
 docker network ls
@@ -363,6 +387,7 @@ docker inspect zap --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{
 ```
 
 #### Health Check Status
+
 ```bash
 # Check health status
 docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
@@ -465,6 +490,7 @@ Recommended resource allocation:
 ---
 
 For more information, see:
+
 - [Scripts Documentation](scripts.md)
 - [Development Tips](development-tips.ai.md)
-- [Main README](../README.md) 
+- [Main README](../README.md)

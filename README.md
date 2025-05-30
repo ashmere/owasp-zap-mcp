@@ -97,6 +97,7 @@ curl http://localhost:3000/status
 Choose your preferred development workflow:
 
 #### 1. Local Development (Fastest)
+
 Run MCP server locally while using containerized ZAP:
 
 ```bash
@@ -110,6 +111,7 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 **Benefits**: Fastest iteration, native debugging, no container overhead
 
 #### 2. Container Development
+
 Full development environment in containers:
 
 ```bash
@@ -123,6 +125,7 @@ docker exec -it owasp-zap-mcp-devcontainer bash
 **Benefits**: Consistent environment, VS Code devcontainer support
 
 #### 3. Build Testing
+
 Test builds from source code:
 
 ```bash

@@ -58,25 +58,31 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 The devcontainer uses the following profiles:
 
 ### Development Profile
+
 ```bash
 docker compose --profile dev up -d zap
 ```
+
 - **Purpose**: Local development with containerized ZAP
 - **What runs**: ZAP container only
 - **MCP Server**: Run locally for development
 
 ### DevContainer Profile  
+
 ```bash
 docker compose --profile devcontainer up -d
 ```
+
 - **Purpose**: Full container development
 - **What runs**: ZAP + Development container
 - **MCP Server**: Run inside development container
 
 ### Services Profile
+
 ```bash
 docker compose --profile services up -d
 ```
+
 - **Purpose**: Complete production-like setup
 - **What runs**: ZAP + Pre-built MCP server
 - **MCP Server**: Pre-built container image
@@ -106,12 +112,14 @@ curl http://localhost:8080/JSON/core/view/version/
 ## Quick Reference
 
 ### Development Commands
+
 1. **Start environment**: `./scripts/start.sh --type dev`
 2. **Run MCP locally**: `cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse`
 3. **Test**: `curl http://localhost:3000/health`
 4. **Stop**: `./scripts/stop.sh`
 
 ### Container Development  
+
 1. **Start container**: `./scripts/start.sh --type devcontainer`
 2. **Attach**: `docker exec -it owasp-zap-mcp-devcontainer bash`
 3. **Run MCP**: `cd /workspace && python -m owasp_zap_mcp.main --sse`

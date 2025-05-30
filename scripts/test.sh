@@ -243,4 +243,3 @@ echo "  • Available Tools: $tool_count"
 echo "  • Integration: MCP ↔ ZAP communication working"
 echo ""
 echo -e "${GREEN}✅ OWASP ZAP MCP is ready for security scanning!${NC}"
- 
