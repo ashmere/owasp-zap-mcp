@@ -194,32 +194,56 @@ The script automatically detects which profile is running by checking for these 
 
 ## 🧪 test.sh
 
-**Purpose**: Run comprehensive test suite across all components.
+**Purpose**: Comprehensive integration testing script
+**Location**: `scripts/test.sh`
 
-### Usage
 ```bash
+# Run all integration tests
 ./scripts/test.sh
+
+# The script tests:
+# - Docker service availability
+# - Container health and status
+# - ZAP API accessibility
+# - MCP server health and tools
+# - End-to-end functionality
 ```
 
-### Test Coverage
-1. **Container Health**: Verify all containers are healthy
-2. **ZAP Connectivity**: Test ZAP API endpoints
-3. **MCP Server**: Test MCP server health and tools
-4. **Tool Registration**: Verify all 10 tools are available
-5. **Functional Tests**: Basic functionality tests
-6. **Integration Tests**: End-to-end workflow tests
+**Features**:
+- ✅ Docker service validation
+- ✅ Container health checks
+- ✅ ZAP API connectivity testing
+- ✅ MCP server validation
+- ✅ Tool availability verification
+- ✅ Colored output with clear status indicators
 
-### Test Output
-- **✅ Green**: Tests passing
-- **❌ Red**: Tests failing
-- **⏳ Yellow**: Tests in progress
-- **Summary**: Total tests run and results
+### manual-integration-test.py
+**Purpose**: Manual MCP interface testing for debugging
+**Location**: `scripts/manual-integration-test.py`
 
-### When to Use
-- **After Changes**: Verify functionality after code changes
-- **Before Deployment**: Ensure system is ready for production
-- **Troubleshooting**: Diagnose system issues
-- **CI/CD Validation**: Automated testing in pipelines
+```bash
+# Run manual integration test
+python scripts/manual-integration-test.py
+
+# Prerequisites:
+# - Environment running (./scripts/start.sh)
+# - ZAP container healthy
+# - MCP server accessible
+```
+
+**Features**:
+- ✅ Health and status endpoint testing
+- ✅ MCP tool execution via HTTP/SSE interface
+- ✅ URL normalization and parameter processing testing
+- ✅ Error handling validation
+- ✅ Comprehensive test reporting
+- ✅ Real-world test targets (httpbin.org, example.com)
+
+**Use Cases**:
+- 🔍 Debugging MCP interface issues
+- 🧪 Manual verification of tool functionality
+- 🔧 Testing parameter processing changes
+- 📊 Validating environment after changes
 
 ## 🔄 Workflow Patterns
 

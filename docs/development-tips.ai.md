@@ -17,6 +17,134 @@ This document contains critical development tips and lessons learned for AI assi
 - **Document** your reasoning process for future reference
 - **Verify** each step before proceeding to the next
 
+### 3. **Comprehensive Testing is Mandatory**
+- **Test Coverage**: 135+ tests with 109 passing, 26 skipped (requiring flags)
+- **Test First**: Review existing tests before making changes
+- **Update Tests**: Always update tests when modifying code
+- **Test Categories**: Unit, integration, error handling, performance, SSE server
+
+## 🧪 **Testing Guidelines**
+
+### **Test Structure Overview**
+
+The project has a comprehensive test suite organized as follows:
+
+```
+tests/
+├── test_mcp_tools.py        # 60+ tests for MCP tool functions and URL normalization
+├── test_zap_client.py       # ZAP client wrapper tests  
+├── test_sse_server.py       # 27 tests for SSE server parameter processing
+├── test_integration.py      # 13 integration tests for complete workflows
+├── test_error_scenarios.py  # 28 error handling and edge case tests
+├── test_performance.py      # 13 performance and concurrency tests
+├── conftest.py             # Shared fixtures and pytest configuration
+├── pytest.ini             # Test markers and configuration
+└── README.md               # Comprehensive test documentation
+```
+
+### **When Making Code Changes**
+
+#### **ALWAYS Update Tests When:**
+1. **Adding new tool functions** → Add tests to `test_mcp_tools.py`
+2. **Modifying ZAP client** → Update `test_zap_client.py`
+3. **Changing SSE parameter processing** → Update `test_sse_server.py`
+4. **Adding error handling** → Add to `test_error_scenarios.py`
+5. **Performance-critical changes** → Add to `test_performance.py`
+6. **Complete workflow changes** → Update `test_integration.py`
+
+#### **Test Running Commands**
+```bash
+# ALWAYS run these after making changes
+cd owasp_zap_mcp
+
+# Quick test run (recommended first)
+python -m pytest -q
+
+# Full test run with markers
+python -m pytest -v
+
+# Test specific categories
+python -m pytest -m "mcp"              # MCP functionality
+python -m pytest -m "error_handling"   # Error scenarios  
+python -m pytest -m "url_normalization" # URL normalization
+python -m pytest -m "security"         # Security-related
+
+# Performance tests (need flag)
+python -m pytest -m "performance" --run-performance
+
+# Integration tests (need flag)  
+python -m pytest -m "integration" --run-integration
+
+# Coverage report
+python -m pytest --cov=src/owasp_zap_mcp --cov-report=term-missing
+```
+
+#### **Test Patterns to Follow**
+
+**For MCP Tool Functions:**
+```python
+@pytest.mark.asyncio
+async def test_mcp_zap_new_tool_success(self, mock_zap_client):
+    """Test new MCP tool success scenario."""
+    # Mock the ZAP client response
+    mock_zap_client.new_operation.return_value = "expected_result"
+    
+    # Call the tool function
+    result = await mcp_zap_new_tool("test_parameter")
+    
+    # Verify MCP response format
+    assert result["content"][0]["text"]
+    response_data = json.loads(result["content"][0]["text"])
+    assert response_data["success"] is True
+    
+    # Verify ZAP client was called correctly
+    mock_zap_client.new_operation.assert_called_with("test_parameter")
+```
+
+**For Error Scenarios:**
+```python
+@pytest.mark.asyncio
+async def test_new_tool_connection_error(self, mock_zap_client):
+    """Test new tool when ZAP connection fails."""
+    mock_zap_client.new_operation.side_effect = ConnectionError("ZAP not running")
+    
+    result = await mcp_zap_new_tool("test_parameter")
+    
+    response_data = json.loads(result["content"][0]["text"])
+    assert response_data["success"] is False
+    assert "ZAP not running" in response_data["error"]
+```
+
+**For Parameter Processing:**
+```python
+def test_process_tool_arguments_new_parameter(self, sse_server):
+    """Test processing new parameter type from random_string."""
+    args = {"random_string": "test_input_pattern"}
+    result = sse_server._process_tool_arguments("mcp_zap_new_tool", args, None)
+    
+    assert result["extracted_param"] == "expected_value"
+    assert "random_string" not in result
+```
+
+### **Performance Benchmarks to Maintain**
+
+When making changes, ensure these performance targets are met:
+- Health check: < 1 second
+- Spider scan start: < 2 seconds  
+- Alert retrieval: < 3 seconds
+- Concurrent operations (10x): < 5 seconds
+- Large dataset processing (1000 alerts): < 5 seconds
+
+### **Test Fixtures and Helpers**
+
+Use these shared fixtures from `conftest.py`:
+- `mock_zap_client_factory` - Configurable ZAP client mocks
+- `sample_security_alerts` - Realistic security findings
+- `url_normalization_test_cases` - URL normalization scenarios
+- `realistic_scan_results` - Real-world scan data
+- `performance_test_data` - Performance testing parameters
+- `error_scenarios` - Common error conditions
+
 ## 🏗️ **Architecture Understanding**
 
 ### **Project Structure**
@@ -112,6 +240,14 @@ except Exception as e:
 - ✅ **Correct**: Use `./scripts/rebuild.sh --type build` for build-dev profile
 - ✅ **Correct**: Use `./scripts/rebuild.sh --type image` for security profile (default)
 - **Always match**: Build step with corresponding Docker Compose profile
+
+### **7. Testing Mistakes**
+- ❌ **Don't skip**: Test updates when modifying code
+- ❌ **Don't ignore**: Failing tests or reduced coverage
+- ❌ **Don't forget**: To test both direct calls and MCP interface
+- ✅ **Always run**: Full test suite before submitting changes
+- ✅ **Always add**: Error scenario tests for new functionality
+- ✅ **Always maintain**: Performance benchmarks
 
 ## 🧪 **Testing Strategies**
 
@@ -231,17 +367,67 @@ docker exec -it owasp-zap-mcp-build bash
 - Use specific base image versions
 - Regularly update dependencies
 
-## 📚 **Reference Materials**
+## 📚 **Reference Materials & Documentation Files**
 
 ### **Key Files to Study**
 1. `research/doris-mcp-server/doris_mcp_server/sse_server.py` - Parameter processing patterns
 2. `owasp_zap_mcp/src/owasp_zap_mcp/sse_server.py` - Current implementation
 3. `owasp_zap_mcp/src/owasp_zap_mcp/tools/zap_tools.py` - Tool implementations
 
-### **Documentation**
-- `docs/architecture.md` - System architecture
-- `docs/threatmodel.md` - Security considerations
-- `README.md` - Setup and usage instructions
+### **Critical Documentation Files to Update**
+When making changes, **ALWAYS** consider updating these files:
+
+#### **Core Documentation:**
+- **`README.md`** - Main project documentation, setup instructions
+- **`docs/development.md`** - Development guide with testing info  
+- **`docs/architecture.md`** - System architecture and design
+- **`docs/docker.md`** - Container setup and configuration
+- **`docs/scripts.md`** - Development scripts documentation
+- **`docs/threatmodel.md`** - Security considerations
+- **`docs/development-tips.ai.md`** - This file - AI assistant guidelines
+
+#### **Test Documentation:**
+- **`owasp_zap_mcp/tests/README.md`** - Comprehensive test documentation
+- **`owasp_zap_mcp/pytest.ini`** - Test configuration and markers
+- **`owasp_zap_mcp/tests/conftest.py`** - Test fixtures and configuration
+
+#### **Configuration Files:**
+- **`docker-compose.yml`** - Container orchestration
+- **`Dockerfile`** - Container build instructions
+- **`owasp_zap_mcp/requirements.txt`** - Python dependencies
+- **`owasp_zap_mcp/pyproject.toml`** - Project configuration
+
+#### **Script Documentation:**
+- **`scripts/rebuild.sh`** - Container rebuild automation
+- **`scripts/test.sh`** - Integration testing script
+- **`scripts/start.sh`** - Environment startup
+- **`scripts/stop.sh`** - Environment shutdown
+
+### **Documentation Update Checklist**
+
+When making changes, check these documentation areas:
+
+#### **For New Features:**
+- [ ] Update `README.md` with new capabilities
+- [ ] Add to `docs/development.md` if development-related
+- [ ] Update `docs/architecture.md` if architectural changes
+- [ ] Add test documentation to `tests/README.md`
+- [ ] Update API documentation if tools change
+
+#### **For Bug Fixes:**
+- [ ] Document the fix in relevant files
+- [ ] Update troubleshooting sections
+- [ ] Add to test documentation if test changes made
+
+#### **For Performance Changes:**
+- [ ] Update performance benchmarks in documentation
+- [ ] Document new performance considerations
+- [ ] Update `test_performance.py` and its documentation
+
+#### **For Security Changes:**
+- [ ] Update `docs/threatmodel.md`
+- [ ] Review and update security documentation
+- [ ] Update container security considerations
 
 ## 🚀 **Future Development Guidelines**
 
@@ -274,8 +460,12 @@ docker exec -it owasp-zap-mcp-build bash
 6. **Never** add unauthorized system packages to containers
 7. **Always** implement proper error handling and logging
 8. **Never** ignore user-specific requirements or constraints
+9. **Always** update tests when modifying code
+10. **Always** update relevant documentation files
+11. **Never** submit changes without running the full test suite
+12. **Always** maintain performance benchmarks and test coverage
 
 ---
 
-*This document should be updated whenever significant patterns or lessons are learned during development.* 
+*This document should be updated whenever significant patterns or lessons are learned during development. The test suite provides excellent examples of usage patterns and expected behaviors - always consult it when making changes.* 
  
