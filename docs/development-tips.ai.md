@@ -278,3 +278,4 @@ docker exec -it owasp-zap-mcp-build bash
 ---
 
 *This document should be updated whenever significant patterns or lessons are learned during development.* 
+ 
