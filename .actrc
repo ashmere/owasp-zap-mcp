@@ -6,20 +6,21 @@
 
 # Mount Docker socket for Docker-in-Docker support
 # This allows the workflow to build Docker images
-# Using Colima Docker socket path with proper bind mount
-#--env DOCKER_CONTEXT=colima-qemu-amd64
---container-options '-e DOCKER_HOST="/Users/mat.davies/.colima/qemu-amd64/docker.sock:/var/run/docker.sock"'
-#/Users/mat.davies/.colima/qemu-amd64/docker.sock:/var/run/docker.sock
+# Using Colima Docker socket path with symlink
+# ensure that use have symlinked the docker socket
+# to /var/run/docker.sock from the colima docker socket
+--container-daemon-socket unix:///var/run/docker.sock
 
 # Set default secrets for local testing
--s GITHUB_TOKEN=dummy_token_for_local_testing
+#-s GITHUB_TOKEN=dummy_token_for_local_testing
+# or run act using the github cli plugin "gh act" 
 
 # Set default environment variables
 --env GITHUB_REPOSITORY=ashmere/owasp-zap-mcp
---env GITHUB_ACTOR=local-user
+#--env GITHUB_ACTOR=local-user
 
 # Force local testing mode - never push to registry when using act
 --env ACT_LOCAL_TESTING=true
 
 # Enable verbose output
--v
+#-v
