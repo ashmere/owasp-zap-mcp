@@ -66,9 +66,9 @@ echo "============================"
 # Auto-detect running profile if not specified
 if [[ "$AUTO_DETECT" == "true" ]]; then
     print_status "🔍 Auto-detecting running services..."
-    
+
     RUNNING_CONTAINERS=$(docker compose ps --format "table {{.Service}}" | tail -n +2)
-    
+
     if echo "$RUNNING_CONTAINERS" | grep -q "owasp-zap-mcp-image"; then
         TYPE="image"
         print_status "📦 Detected: Security profile (pre-built image)"
@@ -141,4 +141,4 @@ if [[ -n "$REMAINING" ]]; then
 else
     echo ""
     echo "All OWASP ZAP MCP services have been stopped."
-fi 
+fi

@@ -149,4 +149,3 @@ echo "  docker compose logs -f zap"
 echo ""
 echo "To stop services:"
 echo "  docker compose down"
- 

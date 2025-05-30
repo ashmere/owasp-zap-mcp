@@ -19,11 +19,13 @@ All scripts are located in the `scripts/` directory and are designed to simplify
 **Purpose**: Start OWASP ZAP MCP services with different configuration options.
 
 ### Usage
+
 ```bash
 ./scripts/start.sh [--type TYPE] [--help]
 ```
 
 ### Options
+
 - `--type image` (default): Use pre-built image with security profile
 - `--type build`: Use built-from-source with build-dev profile  
 - `--type dev`: Use development profile (ZAP + dev container)
@@ -31,6 +33,7 @@ All scripts are located in the `scripts/` directory and are designed to simplify
 - `--help`: Show help message
 
 ### Examples
+
 ```bash
 # Quick start for security scanning (most common)
 ./scripts/start.sh
@@ -51,20 +54,23 @@ All scripts are located in the `scripts/` directory and are designed to simplify
 ### What Each Type Does
 
 #### `--type image` (Default)
+
 - **Profile**: `security`
 - **Container**: `owasp-zap-mcp-image`
 - **Use Case**: Ready-to-use security scanning
 - **Services**: ZAP + Pre-built MCP server
-- **Access**: http://localhost:3000
+- **Access**: <http://localhost:3000>
 
 #### `--type build`
+
 - **Profile**: `build-dev`
 - **Container**: `owasp-zap-mcp-build`
 - **Use Case**: Testing builds from source
 - **Services**: ZAP + MCP server built from source
-- **Access**: http://localhost:3000
+- **Access**: <http://localhost:3000>
 
 #### `--type dev`
+
 - **Profile**: `dev`
 - **Container**: `dev-python`
 - **Use Case**: Local development
@@ -72,6 +78,7 @@ All scripts are located in the `scripts/` directory and are designed to simplify
 - **Note**: Run MCP server locally: `cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse`
 
 #### `--type devcontainer`
+
 - **Profile**: `devcontainer`
 - **Container**: `owasp-zap-mcp-devcontainer`
 - **Use Case**: VS Code container development
@@ -79,28 +86,33 @@ All scripts are located in the `scripts/` directory and are designed to simplify
 - **Access**: `docker exec -it owasp-zap-mcp-devcontainer bash`
 
 ### Service URLs
+
 All types provide these services:
-- **ZAP API**: http://localhost:8080
-- **ZAP Web UI**: http://localhost:8090
-- **MCP Server**: http://localhost:3000 (except dev mode)
+
+- **ZAP API**: <http://localhost:8080>
+- **ZAP Web UI**: <http://localhost:8090>
+- **MCP Server**: <http://localhost:3000> (except dev mode)
 
 ## 🛑 stop.sh
 
 **Purpose**: Stop OWASP ZAP MCP services with automatic detection or specified type.
 
-### Usage
+### stop.sh Usage
+
 ```bash
 ./scripts/stop.sh [--type TYPE] [--help]
 ```
 
-### Options
+### stop.sh Options
+
 - `--type image`: Stop security profile services
 - `--type build`: Stop build-dev profile services
 - `--type dev`: Stop dev profile services
 - `--type devcontainer`: Stop devcontainer profile services
 - `--help`: Show help message
 
-### Examples
+### stop.sh Examples
+
 ```bash
 # Auto-detect and stop (most common)
 ./scripts/stop.sh
@@ -121,6 +133,7 @@ The script automatically detects which profile is running by checking for these 
 5. **zap only** → Stops all services with cleanup
 
 ### Features
+
 - **Smart Detection**: Identifies running profile automatically
 - **Clean Shutdown**: Removes orphaned containers
 - **Status Reporting**: Shows remaining containers if any
@@ -130,17 +143,20 @@ The script automatically detects which profile is running by checking for these 
 
 **Purpose**: Complete rebuild and restart of OWASP ZAP MCP solution with testing.
 
-### Usage
+### rebuild.sh Usage
+
 ```bash
 ./scripts/rebuild.sh [--type TYPE] [--help]
 ```
 
-### Options
+### rebuild.sh Options
+
 - `--type image` (default): Use pre-built image with security profile
 - `--type build`: Build from source with build-dev profile
 - `--help`: Show help message
 
-### Examples
+### rebuild.sh Examples
+
 ```bash
 # Rebuild with pre-built image (fastest)
 ./scripts/rebuild.sh
@@ -150,6 +166,7 @@ The script automatically detects which profile is running by checking for these 
 ```
 
 ### Process Steps
+
 1. **Shutdown**: Stop existing containers
 2. **Cleanup**: Remove orphaned containers
 3. **Build**: Build images if using `--type build`
@@ -157,7 +174,8 @@ The script automatically detects which profile is running by checking for these 
 5. **Health Check**: Wait for services to be ready
 6. **Test**: Run comprehensive test suite
 
-### When to Use
+### rebuild.sh When to Use
+
 - After code changes (use `--type build`)
 - After Docker configuration changes
 - When containers are in inconsistent state
@@ -168,12 +186,14 @@ The script automatically detects which profile is running by checking for these 
 
 **Purpose**: One-time development environment setup and configuration.
 
-### Usage
+### dev-setup.sh Usage
+
 ```bash
 ./scripts/dev-setup.sh
 ```
 
 ### What It Does
+
 1. **Prerequisites Check**: Verifies Docker and Python are available
 2. **Python Setup**: Installs package in development mode (`pip install -e .`)
 3. **Dependencies**: Installs development dependencies if available
@@ -181,49 +201,80 @@ The script automatically detects which profile is running by checking for these 
 5. **Permissions**: Makes all scripts executable
 6. **Guidance**: Provides next steps and usage instructions
 
-### When to Use
+### dev-setup.sh When to Use
+
 - **First Time Setup**: After cloning the repository
 - **New Development Machine**: Setting up development environment
 - **After Clean Install**: Resetting development environment
 - **CI/CD Setup**: Preparing automation environment
 
 ### Prerequisites
+
 - Docker installed and running
 - Python 3.12+ available
 - Git repository cloned
 
 ## 🧪 test.sh
 
-**Purpose**: Run comprehensive test suite across all components.
+**Purpose**: Comprehensive integration testing script
+**Location**: `scripts/test.sh`
 
-### Usage
 ```bash
+# Run all integration tests
 ./scripts/test.sh
+
+# The script tests:
+# - Docker service availability
+# - Container health and status
+# - ZAP API accessibility
+# - MCP server health and tools
+# - End-to-end functionality
 ```
 
-### Test Coverage
-1. **Container Health**: Verify all containers are healthy
-2. **ZAP Connectivity**: Test ZAP API endpoints
-3. **MCP Server**: Test MCP server health and tools
-4. **Tool Registration**: Verify all 10 tools are available
-5. **Functional Tests**: Basic functionality tests
-6. **Integration Tests**: End-to-end workflow tests
+**Features**:
 
-### Test Output
-- **✅ Green**: Tests passing
-- **❌ Red**: Tests failing
-- **⏳ Yellow**: Tests in progress
-- **Summary**: Total tests run and results
+- ✅ Docker service validation
+- ✅ Container health checks
+- ✅ ZAP API connectivity testing
+- ✅ MCP server validation
+- ✅ Tool availability verification
+- ✅ Colored output with clear status indicators
 
-### When to Use
-- **After Changes**: Verify functionality after code changes
-- **Before Deployment**: Ensure system is ready for production
-- **Troubleshooting**: Diagnose system issues
-- **CI/CD Validation**: Automated testing in pipelines
+### manual-integration-test.py
+
+**Purpose**: Manual MCP interface testing for debugging
+**Location**: `scripts/manual-integration-test.py`
+
+```bash
+# Run manual integration test
+python scripts/manual-integration-test.py
+
+# Prerequisites:
+# - Environment running (./scripts/start.sh)
+# - ZAP container healthy
+# - MCP server accessible
+```
+
+**Features**:
+
+- ✅ Health and status endpoint testing
+- ✅ MCP tool execution via HTTP/SSE interface
+- ✅ URL normalization and parameter processing testing
+- ✅ Error handling validation
+- ✅ Comprehensive test reporting
+- ✅ Real-world test targets (httpbin.org, example.com)
+
+**Use Cases**:
+
+- 🔍 Debugging MCP interface issues
+- 🧪 Manual verification of tool functionality
+- 🔧 Testing parameter processing changes
+- 📊 Validating environment after changes
 
 ## 🔄 Workflow Patterns
 
 ### Quick Start Workflow
+
 ```bash
 # One-time setup
 ./scripts/dev-setup.sh
@@ -236,6 +287,7 @@ The script automatically detects which profile is running by checking for these 
 ```
 
 ### Development Workflow
+
 ```bash
 # Setup development environment
 ./scripts/dev-setup.sh
@@ -254,6 +306,7 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 ```
 
 ### Build Testing Workflow
+
 ```bash
 # Test complete build process
 ./scripts/rebuild.sh --type build
@@ -266,6 +319,7 @@ cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
 ```
 
 ### Container Development Workflow
+
 ```bash
 # Start container development
 ./scripts/start.sh --type devcontainer
@@ -286,6 +340,7 @@ python -m owasp_zap_mcp.main --sse
 ### Common Issues
 
 #### Port Conflicts
+
 ```bash
 # Check what's using the ports
 lsof -i :8080 -i :3000 -i :8090
@@ -294,6 +349,7 @@ lsof -i :8080 -i :3000 -i :8090
 ```
 
 #### Permission Denied
+
 ```bash
 # Make scripts executable
 chmod +x scripts/*.sh
@@ -303,6 +359,7 @@ chmod +x scripts/*.sh
 ```
 
 #### Docker Issues
+
 ```bash
 # Check Docker daemon
 docker info
@@ -315,6 +372,7 @@ docker compose logs
 ```
 
 #### Container Detection Issues
+
 ```bash
 # Manual cleanup
 docker compose down --remove-orphans
@@ -326,6 +384,7 @@ docker compose down --remove-orphans
 ### Debug Commands
 
 #### Check Running Services
+
 ```bash
 # List all containers
 docker compose ps
@@ -336,6 +395,7 @@ docker compose --profile build-dev ps
 ```
 
 #### View Logs
+
 ```bash
 # All services
 docker compose logs -f
@@ -346,6 +406,7 @@ docker compose logs -f owasp-zap-mcp-image
 ```
 
 #### Manual Service Control
+
 ```bash
 # Start specific profile
 docker compose --profile security up -d
@@ -357,18 +418,21 @@ docker compose --profile security down
 ## 💡 Best Practices
 
 ### Script Usage
+
 1. **Use start.sh for daily work**: Simplest way to start services
 2. **Use stop.sh without parameters**: Auto-detection is reliable
 3. **Use rebuild.sh for testing**: Ensures clean state
 4. **Run dev-setup.sh once**: After cloning or major changes
 
 ### Development Tips
+
 1. **Type Selection**: Choose the right type for your workflow
 2. **Log Monitoring**: Use `docker compose logs -f` to monitor services
 3. **Health Checks**: Wait for services to be healthy before testing
 4. **Clean Rebuilds**: Use rebuild.sh when containers misbehave
 
 ### Production Deployment
+
 1. **Use image type**: Pre-built images are more reliable
 2. **Run tests**: Always run test.sh before deployment
 3. **Monitor logs**: Set up log monitoring for production
@@ -377,6 +441,7 @@ docker compose --profile security down
 ---
 
 For more information, see:
+
 - [Docker Configuration](docker.md)
 - [Development Tips](development-tips.ai.md)
-- [Main README](../README.md) 
+- [Main README](../README.md)

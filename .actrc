@@ -13,7 +13,7 @@
 
 # Set default secrets for local testing
 #-s GITHUB_TOKEN=dummy_token_for_local_testing
-# or run act using the github cli plugin "gh act" 
+# or run act using the github cli plugin "gh act"
 
 # Set default environment variables
 --env GITHUB_REPOSITORY=ashmere/owasp-zap-mcp
