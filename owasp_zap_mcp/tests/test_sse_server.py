@@ -420,7 +420,9 @@ class TestSSEServerIntegration:
         # Verify session was auto-created
         assert "test_session" in sse_server.client_sessions
         session = sse_server.client_sessions["test_session"]
-        assert session["client_id"].startswith("test_client_")
+        assert "created_at" in session
+        assert "last_active" in session
+        assert "queue" in session
 
     @pytest.mark.asyncio
     async def test_call_tool_with_parameter_processing(self, sse_server):

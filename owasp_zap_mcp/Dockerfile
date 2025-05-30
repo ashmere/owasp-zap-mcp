@@ -11,6 +11,12 @@ LABEL repository="https://github.com/ashmere/owasp-zap-mcp"
 # Set working directory
 WORKDIR /app
 
+# Set default environment variables for configuration
+ENV LOG_LEVEL=INFO
+ENV ZAP_BASE_URL=http://zap:8080
+ENV SERVER_HOST=0.0.0.0
+ENV SERVER_PORT=3000
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \

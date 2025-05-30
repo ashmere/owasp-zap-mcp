@@ -241,8 +241,39 @@ If you're upgrading from the previous implementation:
 Enable debug logging for troubleshooting:
 
 ```bash
-export LOG_LEVEL=debug
+# Environment variable (recommended)
+export LOG_LEVEL=DEBUG
 owasp-zap-mcp
+
+# Docker environment
+LOG_LEVEL=DEBUG ./scripts/start.sh --type build
+
+# Or set in .env file
+echo "LOG_LEVEL=DEBUG" >> .env
+```
+
+**Available log levels**: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+
+**Default**: `INFO` in containers, configurable via environment variables
+
+**Debug output includes**:
+- Tool registration details
+- ZAP connection timing
+- Parameter processing logic
+- MCP message flow
+- Scan status and timing
+- Environment variable validation
+
+**View logs**:
+```bash
+# Docker logs
+docker-compose logs -f owasp-zap-mcp
+
+# Test logs  
+pytest -xvs --log-cli-level=DEBUG tests/
+
+# Real-time debugging
+LOG_LEVEL=DEBUG ./scripts/start.sh --type build
 ```
 
 ## Contributing
