@@ -5,8 +5,47 @@
 
 set -e  # Exit on any error
 
+# Default values
+TYPE="image"
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --type)
+            TYPE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--type image|build]"
+            echo ""
+            echo "Options:"
+            echo "  --type image    Use pre-built image from registry (default)"
+            echo "  --type build    Build from source code"
+            echo "  -h, --help      Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Use pre-built image (default)"
+            echo "  $0 --type image       # Use pre-built image"
+            echo "  $0 --type build       # Build from source"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate type parameter
+if [[ "$TYPE" != "image" && "$TYPE" != "build" ]]; then
+    echo "Error: --type must be either 'image' or 'build'"
+    exit 1
+fi
+
 echo "🔧 OWASP ZAP MCP Rebuild Script"
 echo "================================"
+echo "Mode: $TYPE"
 
 # Function to print colored output
 print_status() {
@@ -31,15 +70,26 @@ docker compose down --remove-orphans || true
 
 # Step 3: Remove any existing images (optional - uncomment if needed)
 # print_status "🗑️ Step 3: Removing existing images..."
-# docker rmi owasp-zap-mcp_owasp-zap-mcp-build || true
+# if [[ "$TYPE" == "build" ]]; then
+#     docker rmi owasp-zap-mcp_owasp-zap-mcp-build || true
+# fi
 
-# Step 4: Rebuild the image
-print_status "🔨 Step 4: Rebuilding OWASP ZAP MCP image..."
-docker compose build --no-cache owasp-zap-mcp-build
+# Step 4: Build image if using build mode
+if [[ "$TYPE" == "build" ]]; then
+    print_status "🔨 Step 4: Building OWASP ZAP MCP image from source..."
+    docker compose build --no-cache owasp-zap-mcp-build
+else
+    print_status "⏭️ Step 4: Skipping build (using pre-built image)..."
+fi
 
-# Step 5: Start containers with security profile
-print_status "🚀 Step 5: Starting containers with security profile..."
-docker compose --profile security up -d
+# Step 5: Start containers with appropriate profile
+if [[ "$TYPE" == "build" ]]; then
+    print_status "🚀 Step 5: Starting containers with build-dev profile..."
+    docker compose --profile build-dev up -d
+else
+    print_status "🚀 Step 5: Starting containers with security profile..."
+    docker compose --profile security up -d
+fi
 
 # Step 6: Wait for services to be ready
 print_status "⏳ Step 6: Waiting for services to be ready..."
@@ -78,12 +128,24 @@ fi
 
 print_success "🎉 Rebuild complete!"
 echo ""
-echo "Services are running:"
-echo "  - ZAP: http://localhost:8080"
-echo "  - MCP Server: http://localhost:3000"
+echo "Services are running in $TYPE mode:"
+if [[ "$TYPE" == "build" ]]; then
+    echo "  - ZAP: http://localhost:8080"
+    echo "  - MCP Server (built from source): http://localhost:3000"
+    echo "  - Container: owasp-zap-mcp-build"
+else
+    echo "  - ZAP: http://localhost:8080"
+    echo "  - MCP Server (pre-built image): http://localhost:3000"
+    echo "  - Container: owasp-zap-mcp-image"
+fi
 echo ""
 echo "To view logs:"
-echo "  docker compose logs -f"
+if [[ "$TYPE" == "build" ]]; then
+    echo "  docker compose logs -f owasp-zap-mcp-build"
+else
+    echo "  docker compose logs -f owasp-zap-mcp-image"
+fi
+echo "  docker compose logs -f zap"
 echo ""
 echo "To stop services:"
 echo "  docker compose down"

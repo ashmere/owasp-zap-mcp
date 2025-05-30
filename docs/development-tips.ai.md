@@ -107,6 +107,12 @@ except Exception as e:
 - ✅ **Always check**: `ZAP_BASE_URL` and container networking
 - **Verify**: Container health before running tools
 
+### **6. Rebuild Script Consistency**
+- ❌ **Wrong**: Build `owasp-zap-mcp-build` service then use `security` profile (uses different service)
+- ✅ **Correct**: Use `./scripts/rebuild.sh --type build` for build-dev profile
+- ✅ **Correct**: Use `./scripts/rebuild.sh --type image` for security profile (default)
+- **Always match**: Build step with corresponding Docker Compose profile
+
 ## 🧪 **Testing Strategies**
 
 ### **Multi-Level Testing**
@@ -130,11 +136,28 @@ result = await sse_server.call_tool(
 
 ### **Container Testing**
 ```bash
-# Rebuild and test
-docker compose build --no-cache owasp-zap-mcp-build
-docker compose up -d
+# Rebuild and test with pre-built image (default)
+./scripts/rebuild.sh
+
+# Rebuild and test with source build
+./scripts/rebuild.sh --type build
+
+# Manual rebuild commands
+docker compose build --no-cache owasp-zap-mcp-build  # For build mode
+docker compose --profile security up -d              # For image mode  
+docker compose --profile build-dev up -d             # For build mode
 docker exec owasp-zap-mcp-build python test_script.py
 ```
+
+### **Rebuild Script Usage**
+The `scripts/rebuild.sh` script supports two modes:
+- `--type image` (default): Uses pre-built image with security profile
+- `--type build`: Builds from source with build-dev profile
+
+**CRITICAL**: Always ensure consistency between build step and profile:
+- ❌ **Wrong**: Build `owasp-zap-mcp-build` then use `security` profile
+- ✅ **Correct**: Build `owasp-zap-mcp-build` then use `build-dev` profile
+- ✅ **Correct**: Skip build then use `security` profile with pre-built image
 
 ## 📋 **Development Workflow**
 

@@ -30,61 +30,111 @@ This project provides a native MCP server implementation that bridges AI models 
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## Development
+## Quick Start
 
-### Quick Start (Recommended)
-
-The fastest way to get started with development:
+### 1. Clone and Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/ashmere/owasp-zap-mcp.git
+cd owasp-zap-mcp
+
 # One-time setup
 ./scripts/dev-setup.sh
-
-# Daily workflow
-./scripts/dev-start.sh
-
-# For local development, set the correct ZAP URL
-export ZAP_BASE_URL=http://localhost:8080
-cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
-
-# When done
-./scripts/dev-stop.sh
 ```
 
-### Development Options
-
-#### 1. Host Development (Recommended)
-
-- **Fastest**: No container overhead
-- **Native permissions**: No file permission issues
-- **Better IDE integration**: Native debugging and file watching
-- **Simple setup**: Just start ZAP, develop on host
-
-#### 2. DevContainer Development
-
-- **Consistent environment**: Same setup for all developers
-- **Isolated**: Doesn't affect host system
-- **VS Code integration**: Built-in devcontainer support
+### 2. Start Services
 
 ```bash
-# Open in VS Code and use "Reopen in Container"
-# Or manually:
-docker compose --profile devcontainer up -d
+# Start security scanning services (most common)
+./scripts/start.sh
+
+# Or choose specific type
+./scripts/start.sh --type image      # Pre-built image (default)
+./scripts/start.sh --type build      # Build from source
+./scripts/start.sh --type dev        # Local development
+./scripts/start.sh --type devcontainer  # Container development
 ```
 
-### Docker Compose Profiles
+### 3. Verify Setup
 
-- **`dev`**: Host development (ZAP only)
-- **`devcontainer`**: Container development (ZAP + dev container)
-- **`services`**: Production deployment (ZAP + MCP server)
+```bash
+# Test ZAP connectivity
+curl http://localhost:8080/JSON/core/view/version/
 
-### Architecture Benefits
+# Test MCP server
+curl http://localhost:3000/health
+curl http://localhost:3000/status
+```
 
-✅ **Zero Code Duplication**: Single docker-compose.yml with profiles  
-✅ **No Permission Issues**: Host development uses native permissions  
-✅ **Simpler Setup**: One command to start development environment  
-✅ **Flexible**: Choose host or container development  
-✅ **Better Performance**: No container overhead for development  
+### 4. Stop Services
+
+```bash
+# Auto-detect and stop (recommended)
+./scripts/stop.sh
+
+# Or stop specific type
+./scripts/stop.sh --type image
+```
+
+## Development Options
+
+### For Security Engineers (Recommended)
+
+**Quick Security Scanning**: Use pre-built images for immediate scanning capability.
+
+```bash
+# Start services
+./scripts/start.sh
+
+# Services available at:
+# - ZAP API: http://localhost:8080
+# - ZAP Web UI: http://localhost:8090  
+# - MCP Server: http://localhost:3000
+```
+
+### For Developers
+
+Choose your preferred development workflow:
+
+#### 1. Local Development (Fastest)
+Run MCP server locally while using containerized ZAP:
+
+```bash
+# Start ZAP only
+./scripts/start.sh --type dev
+
+# In another terminal, run MCP server locally
+cd owasp_zap_mcp && python -m owasp_zap_mcp.main --sse
+```
+
+**Benefits**: Fastest iteration, native debugging, no container overhead
+
+#### 2. Container Development
+Full development environment in containers:
+
+```bash
+# Start container development
+./scripts/start.sh --type devcontainer
+
+# Attach to development container
+docker exec -it owasp-zap-mcp-devcontainer bash
+```
+
+**Benefits**: Consistent environment, VS Code devcontainer support
+
+#### 3. Build Testing
+Test builds from source code:
+
+```bash
+# Build and test from source
+./scripts/start.sh --type build
+
+# Or use rebuild script for complete testing
+./scripts/rebuild.sh --type build
+```
+
+**Benefits**: Test Docker builds, validate container integration
 
 ## Installation
 
@@ -94,35 +144,7 @@ docker compose --profile devcontainer up -d
 - Cursor IDE or VS Code (with MCP support)
 - Python 3.12+ (for local development)
 
-### 1. Start Services
-
-```bash
-# Clone the repository
-git clone https://github.com/ashmere/owasp-zap-mcp.git
-cd owasp-zap-mcp
-
-# Start all services
-docker compose up -d
-
-# Check status
-docker compose ps
-```
-
-### 2. Verify Setup
-
-```bash
-# Test ZAP connectivity
-curl http://localhost:8080/JSON/core/view/version/
-
-# Test MCP server
-curl http://localhost:3000/health
-curl http://localhost:3000/status
-
-# Check MCP server logs
-docker compose logs owasp-zap-mcp
-```
-
-### 3. Configure Your IDE
+### IDE Configuration
 
 #### Cursor IDE
 
@@ -266,8 +288,10 @@ owasp-zap-mcp/
 ├── docker-compose.yml         # Service orchestration with profiles
 ├── scripts/                   # Development workflow scripts
 │   ├── dev-setup.sh          # One-time development setup
-│   ├── dev-start.sh          # Start development environment
-│   └── dev-stop.sh           # Stop development environment
+│   ├── start.sh              # Start services with multiple options
+│   ├── stop.sh               # Stop services with auto-detection
+│   ├── rebuild.sh            # Complete rebuild and testing
+│   └── test.sh               # Run comprehensive tests
 ├── .devcontainer/            # DevContainer configuration
 │   ├── devcontainer.json     # Simplified devcontainer setup
 │   └── README.md            # DevContainer documentation
@@ -276,10 +300,25 @@ owasp-zap-mcp/
 │   └── rules/               # Scanning rules and guidelines
 ├── .vscode/                 # VS Code configuration
 │   └── mcp.json            # MCP server configuration
-├── reports/                 # Organized scan reports by domain
 ├── docs/                    # Documentation
+│   ├── scripts.md          # Detailed scripts documentation
+│   ├── docker.md           # Docker configuration and profiles
+│   └── development-tips.ai.md  # AI assistant development guide
+├── reports/                 # Organized scan reports by domain
 └── README.md               # This file
 ```
+
+## Scripts Reference
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `dev-setup.sh` | One-time environment setup | `./scripts/dev-setup.sh` |
+| `start.sh` | Start services with options | `./scripts/start.sh [--type TYPE]` |
+| `stop.sh` | Stop services with auto-detection | `./scripts/stop.sh [--type TYPE]` |
+| `rebuild.sh` | Complete rebuild and test | `./scripts/rebuild.sh [--type TYPE]` |
+| `test.sh` | Run comprehensive tests | `./scripts/test.sh` |
+
+For detailed script documentation, see [docs/scripts.md](docs/scripts.md).
 
 ## Troubleshooting
 
@@ -292,7 +331,7 @@ owasp-zap-mcp/
    - Verify network connectivity between containers
 
 2. **MCP Tools Not Available**:
-   - Check MCP server logs: `docker compose logs owasp-zap-mcp`
+   - Check MCP server logs: `docker compose logs owasp-zap-mcp-image`
    - Verify IDE MCP configuration
    - Test SSE endpoint: `curl http://localhost:3000/sse`
    - Restart your IDE if needed
@@ -303,12 +342,8 @@ owasp-zap-mcp/
    - Ensure containers are on the same network
 
 4. **Container Issues**:
-   - Rebuild containers: `docker compose build --no-cache`
-   - Reset everything: `docker compose down -v && docker compose up -d`
-
-### Fallback Strategy
-
-If MCP tools fail, you can use direct ZAP API calls. See `.cursor/rules/owasp_zap_scanning.mdc` for complete fallback commands and troubleshooting procedures.
+   - Rebuild containers: `./scripts/rebuild.sh`
+   - Reset everything: `./scripts/stop.sh && ./scripts/start.sh`
 
 ### Useful Commands
 
@@ -317,13 +352,10 @@ If MCP tools fail, you can use direct ZAP API calls. See `.cursor/rules/owasp_za
 docker compose logs -f
 
 # Restart services
-docker compose restart
-
-# Stop services
-docker compose down
+./scripts/stop.sh && ./scripts/start.sh
 
 # Clean rebuild
-docker compose down -v && docker compose build --no-cache && docker compose up -d
+./scripts/rebuild.sh
 
 # Test endpoints
 curl http://localhost:8080/JSON/core/view/version/  # ZAP API
