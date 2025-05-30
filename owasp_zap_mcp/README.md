@@ -57,8 +57,8 @@ pip install -r requirements.txt
 # Build the container
 docker build -t owasp-zap-mcp .
 
-# Run with docker-compose (includes ZAP)
-docker-compose up -d
+# Run with docker compose (includes ZAP)
+docker compose up -d
 ```
 
 ## Configuration
@@ -112,8 +112,8 @@ docker run -it owasp-zap-mcp
 # SSE mode
 docker run -p 3000:3000 owasp-zap-mcp python -m owasp_zap_mcp.main --sse
 
-# With docker-compose
-docker-compose up -d
+# With docker compose
+docker compose up -d
 ```
 
 ## Available Tools

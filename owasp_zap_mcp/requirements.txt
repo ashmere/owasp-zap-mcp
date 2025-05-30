@@ -10,6 +10,10 @@ requests>=2.31.0
 # Logging and Configuration
 python-dotenv>=1.0.0
 
+# Web Server Dependencies for SSE mode
+fastapi>=0.95.0
+uvicorn>=0.21.0
+
 # SSE Support for HTTP mode
 sse-starlette>=1.6.0
 

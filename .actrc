@@ -1,0 +1,26 @@
+# Configuration for act (local GitHub Actions testing)
+# Use this with: act workflow_dispatch
+# Use a larger runner image for multi-arch builds
+
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Mount Docker socket for Docker-in-Docker support
+# This allows the workflow to build Docker images
+# Using Colima Docker socket path with symlink
+# ensure that use have symlinked the docker socket
+# to /var/run/docker.sock from the colima docker socket
+--container-daemon-socket unix:///var/run/docker.sock
+
+# Set default secrets for local testing
+#-s GITHUB_TOKEN=dummy_token_for_local_testing
+# or run act using the github cli plugin "gh act" 
+
+# Set default environment variables
+--env GITHUB_REPOSITORY=ashmere/owasp-zap-mcp
+#--env GITHUB_ACTOR=local-user
+
+# Force local testing mode - never push to registry when using act
+--env ACT_LOCAL_TESTING=true
+
+# Enable verbose output
+#-v

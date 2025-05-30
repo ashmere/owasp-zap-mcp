@@ -19,23 +19,42 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies and the package in one layer
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with verbose output for debugging
+RUN echo "Installing Python dependencies..." && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    echo "Dependencies installed successfully"
 
 # Copy source code
 COPY . .
 
-# Install the package in development mode and create non-root user
-RUN pip install -e . && \
+# Verify the package structure
+RUN echo "Verifying package structure..." && \
+    ls -la && \
+    test -f pyproject.toml && echo "✅ pyproject.toml found" || (echo "❌ pyproject.toml missing" && exit 1) && \
+    test -d src/owasp_zap_mcp && echo "✅ Source directory found" || (echo "❌ Source directory missing" && exit 1)
+
+# Install the package and create non-root user
+RUN echo "Installing package..." && \
+    pip install -e . && \
+    echo "Package installed successfully" && \
     useradd --create-home --shell /bin/bash zapuser
+
+# Test the installation
+RUN echo "Testing package installation..." && \
+    python -c "import owasp_zap_mcp; print('✅ Package imports successfully')" && \
+    python -c "from owasp_zap_mcp.main import run_main_sync; print('✅ Main module imports successfully')" && \
+    echo "Installation test passed"
+
+# Switch to non-root user
 USER zapuser
 
 # Expose port for SSE mode
 EXPOSE 3000
 
-# Health check
+# Health check that actually tests the package
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)"
+    CMD python -c "import owasp_zap_mcp; import sys; sys.exit(0)"
 
 # Default command (stdio mode)
 CMD ["owasp-zap-mcp"]

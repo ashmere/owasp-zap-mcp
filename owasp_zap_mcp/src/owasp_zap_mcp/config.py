@@ -4,8 +4,8 @@ import os
 
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv(override=True)
+# Load environment variables from .env file (don't override existing env vars)
+load_dotenv(override=False)
 
 # Get Log Level from environment variable, default to 'info'
 LOG_LEVEL_STR = os.getenv("LOG_LEVEL", "info").upper()

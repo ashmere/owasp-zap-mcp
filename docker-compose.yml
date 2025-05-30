@@ -1,9 +1,10 @@
 services:
-  # OWASP ZAP Security Scanner
+  # OWASP ZAP Security Scanner (Base service for all profiles)
   zap:
     image: zaproxy/zap-stable:latest
     container_name: zap
-    profiles: ["services", "dev", "devcontainer"]
+    platform: linux/amd64  # Force x86_64 platform for better compatibility
+    profiles: ["services", "dev", "devcontainer", "security", "build-dev"]
     ports:
       - "8080:8080"
       - "8090:8090"
@@ -14,6 +15,7 @@ services:
       -config api.disablekey=true
     environment:
       - ZAP_PORT=${ZAP_PORT:-8080}
+      - JAVA_OPTS=-Xmx1g -XX:+UseContainerSupport
     volumes:
       - zap_data:/zap/wrk
     networks:
@@ -25,13 +27,11 @@ services:
       retries: 5
       start_period: 60s
 
-  # OWASP ZAP MCP Server (Production/Testing only)
-  owasp-zap-mcp:
-    build:
-      context: ./owasp_zap_mcp
-      dockerfile: Dockerfile
-    container_name: owasp-zap-mcp
-    profiles: ["services"]  # Only for production/testing, not dev
+  # OWASP ZAP MCP Server - Pre-built Image (for security engineers)
+  owasp-zap-mcp-image:
+    image: ghcr.io/ashmere/owasp-zap-mcp:latest
+    container_name: owasp-zap-mcp-image
+    profiles: ["services", "security"]  # For security engineers using pre-built image
     depends_on:
       zap:
         condition: service_healthy
@@ -55,19 +55,70 @@ services:
       retries: 3
       start_period: 10s
 
-  # Development container (optional, for those who prefer container dev)
+  # OWASP ZAP MCP Server - Built from Source (for developers testing builds)
+  owasp-zap-mcp-build:
+    build:
+      context: ./owasp_zap_mcp
+      dockerfile: Dockerfile
+    container_name: owasp-zap-mcp-build
+    profiles: ["build-dev"]  # For developers who want to test container builds
+    depends_on:
+      zap:
+        condition: service_healthy
+    environment:
+      - ZAP_BASE_URL=http://zap:8080
+      - ZAP_API_KEY=
+      - LOG_LEVEL=INFO
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+    networks:
+      - zap-network
+    ports:
+      - "3000:3000"
+    command: ["python", "-m", "owasp_zap_mcp.main", "--sse"]
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Development container for source code development
   devcontainer:
     image: mcr.microsoft.com/devcontainers/python:3.12
+    container_name: owasp-zap-mcp-devcontainer
     profiles: ["devcontainer"]
     volumes:
       - .:/workspace:cached
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /workspace
     command: sleep infinity
-    network_mode: host
+    network_mode: host  # Allows access to host services
     environment:
       - ZAP_BASE_URL=http://localhost:8080
       - LOG_LEVEL=INFO
+      - PYTHONPATH=/workspace
+    depends_on:
+      zap:
+        condition: service_healthy
+
+  # Development helper - Python environment with dependencies
+  dev-python:
+    image: python:3.12-slim
+    container_name: owasp-zap-mcp-dev
+    profiles: ["dev"]
+    volumes:
+      - .:/workspace:cached
+    working_dir: /workspace
+    command: sleep infinity
+    networks:
+      - zap-network
+    environment:
+      - ZAP_BASE_URL=http://zap:8080
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/workspace
     depends_on:
       zap:
         condition: service_healthy
