@@ -2,7 +2,6 @@
 
 A comprehensive Model Context Protocol (MCP) server for integrating OWASP ZAP security scanning with AI-powered development workflows. This implementation provides seamless security testing capabilities through modern AI interfaces like Cursor IDE.
 
-> **Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
 > **Disclaimer**: This project is an independent implementation and is not officially associated with, endorsed by, or affiliated with the OWASP Foundation or the OWASP ZAP project. OWASP and ZAP are trademarks of the OWASP Foundation.
 
 ## Features
