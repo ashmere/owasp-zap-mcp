@@ -13,6 +13,7 @@ import logging
 import time
 import uuid
 from typing import Any, Dict, Optional
+from datetime import datetime
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -260,32 +261,24 @@ class ZAPMCPSseServer:
         try:
             # Get session ID from query parameters
             session_id = request.query_params.get("session_id")
+            
             if not session_id:
                 return JSONResponse(
-                    {"error": "Missing session_id parameter"},
-                    status_code=400,
-                    headers={
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Credentials": "true",
-                        "Access-Control-Allow-Methods": "*",
-                        "Access-Control-Allow-Headers": "*",
-                        "Access-Control-Expose-Headers": "*",
-                    },
+                    {"error": "Missing session_id parameter"}, 
+                    status_code=400
                 )
 
-            # Auto-create session if it doesn't exist (for testing convenience)
+            # Auto-create session if it doesn't exist (for testing)
             if session_id not in self.client_sessions:
-                logger.info(f"Auto-creating session for testing: {session_id}")
                 self.client_sessions[session_id] = {
-                    "client_id": f"test_client_{session_id[:8]}",
-                    "created_at": time.time(),
-                    "last_active": time.time(),
+                    "created_at": datetime.now(),
+                    "last_active": datetime.now(),
                     "queue": asyncio.Queue(),
                 }
-
-            # Update last active time
-            self.client_sessions[session_id]["last_active"] = time.time()
-
+            else:
+                # Update last active time
+                self.client_sessions[session_id]["last_active"] = datetime.now()
+            
             # Parse request body
             body = await request.json()
             logger.info(f"Received MCP message [Session ID: {session_id}]: {body}")
