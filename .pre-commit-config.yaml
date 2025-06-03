@@ -82,6 +82,20 @@ repos:
       - id: shellcheck
         exclude: ^scripts/test.sh$
 
+  # Run fast, safe Python tests (no Docker/ZAP required)
+  - repo: local
+    hooks:
+      - id: pytest-fast
+        name: Run fast Python tests (no Docker/ZAP)
+        entry: pytest
+        language: system
+        types: [python]
+        args:
+          - owasp_zap_mcp/tests/test_sse_server.py
+          - owasp_zap_mcp/tests/test_error_scenarios.py
+          - owasp_zap_mcp/tests/test_performance.py
+          - owasp_zap_mcp/tests/test_mcp_tools.py
+
 # Configuration for specific tools
 ci:
   autofix_commit_msg: |
