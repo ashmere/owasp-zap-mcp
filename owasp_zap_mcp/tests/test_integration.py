@@ -242,14 +242,15 @@ class TestCompleteWorkflowIntegration:
 
             filtered_alerts = [
                 ZAPAlert(
-                    {
-                        "name": f"Test {risk_level} Alert",
-                        "risk": risk_level,
-                        "confidence": "High",
-                        "description": f"Test {risk_level} description",
-                        "url": "https://example.com/",
-                        "solution": f"Fix {risk_level} issue",
-                    }
+                    alert_id="1",
+                    name=f"Test {risk_level} Alert",
+                    risk=risk_level,
+                    confidence="High",
+                    url="https://example.com/",
+                    description=f"Test {risk_level} description",
+                    solution=f"Fix {risk_level} issue",
+                    reference="",
+                    plugin_id="10001",
                 ),
             ]
             mock_zap_client.get_alerts.return_value = filtered_alerts
@@ -381,34 +382,37 @@ class TestRealWorldScenarios:
 
             typical_findings = [
                 ZAPAlert(
-                    {
-                        "name": "Missing X-Frame-Options Header",
-                        "risk": "Medium",
-                        "confidence": "High",
-                        "description": "X-Frame-Options header is not included",
-                        "url": "https://company.com/",
-                        "solution": "Add X-Frame-Options header",
-                    }
+                    alert_id="1",
+                    name="Missing X-Frame-Options Header",
+                    risk="Medium",
+                    confidence="High",
+                    url="https://company.com/",
+                    description="X-Frame-Options header is not included",
+                    solution="Add X-Frame-Options header",
+                    reference="",
+                    plugin_id="10001",
                 ),
                 ZAPAlert(
-                    {
-                        "name": "Content Security Policy (CSP) Header Not Set",
-                        "risk": "Medium",
-                        "confidence": "High",
-                        "description": "CSP header is missing",
-                        "url": "https://company.com/",
-                        "solution": "Implement Content Security Policy",
-                    }
+                    alert_id="2",
+                    name="Content Security Policy (CSP) Header Not Set",
+                    risk="Medium",
+                    confidence="High",
+                    url="https://company.com/",
+                    description="CSP header is missing",
+                    solution="Implement Content Security Policy",
+                    reference="",
+                    plugin_id="10002",
                 ),
                 ZAPAlert(
-                    {
-                        "name": "Cookie without SameSite Attribute",
-                        "risk": "Low",
-                        "confidence": "Medium",
-                        "description": "Cookie lacks SameSite attribute",
-                        "url": "https://company.com/contact",
-                        "solution": "Add SameSite attribute to cookies",
-                    }
+                    alert_id="3",
+                    name="Cookie without SameSite Attribute",
+                    risk="Low",
+                    confidence="Medium",
+                    url="https://company.com/contact",
+                    description="Cookie lacks SameSite attribute",
+                    solution="Add SameSite attribute to cookies",
+                    reference="",
+                    plugin_id="10003",
                 ),
             ]
             mock_client.get_alerts.return_value = typical_findings
@@ -506,24 +510,26 @@ class TestRealWorldScenarios:
 
             production_findings = [
                 ZAPAlert(
-                    {
-                        "name": "Strict-Transport-Security Header Not Set",
-                        "risk": "Low",
-                        "confidence": "High",
-                        "description": "HSTS header is missing",
-                        "url": "https://production.com/",
-                        "solution": "Implement HSTS header",
-                    }
+                    alert_id="1",
+                    name="Strict-Transport-Security Header Not Set",
+                    risk="Low",
+                    confidence="High",
+                    url="https://production.com/",
+                    description="HSTS header is missing",
+                    solution="Implement HSTS header",
+                    reference="",
+                    plugin_id="10001",
                 ),
                 ZAPAlert(
-                    {
-                        "name": "Server Leaks Information via X-Powered-By Header",
-                        "risk": "Low",
-                        "confidence": "Medium",
-                        "description": "Server reveals technology stack",
-                        "url": "https://production.com/",
-                        "solution": "Remove or modify X-Powered-By header",
-                    }
+                    alert_id="2",
+                    name="Server Leaks Information via X-Powered-By Header",
+                    risk="Low",
+                    confidence="Medium",
+                    url="https://production.com/",
+                    description="Server reveals technology stack",
+                    solution="Remove or modify X-Powered-By header",
+                    reference="",
+                    plugin_id="10002",
                 ),
             ]
 

@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
-from ..zap_client import ZAPClient, ZAPClientError
+from ..zap_client import ZAPClient
 
 logger = logging.getLogger(__name__)
 
@@ -140,13 +140,6 @@ Use `zap_get_scan_status` with scan_id="{scan_id}" and scan_type="spider" to mon
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"ZAP spider scan failed: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Spider Scan Failed**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error in spider scan: {e}")
         return [
@@ -202,13 +195,6 @@ Use `zap_get_scan_status` with scan_id="{scan_id}" and scan_type="active" to mon
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"ZAP active scan failed: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Active Scan Failed**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error in active scan: {e}")
         return [
@@ -281,13 +267,6 @@ async def zap_get_scan_status(
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to get scan status: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Failed to Get Scan Status**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error getting scan status: {e}")
         return [

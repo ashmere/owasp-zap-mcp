@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
-from ..zap_client import ZAPAlert, ZAPClient, ZAPClientError
+from ..zap_client import ZAPAlert, ZAPClient
 
 logger = logging.getLogger(__name__)
 
@@ -167,13 +167,6 @@ async def zap_get_alerts(
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to get ZAP alerts: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Failed to Get Alerts**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error getting alerts: {e}")
         return [
@@ -295,14 +288,6 @@ No high or medium risk vulnerabilities detected.
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to get scan results: {e}")
-        return [
-            TextContent(
-                type="text",
-                text=f"❌ **Failed to Get Scan Results**\n\nError: {str(e)}",
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error getting scan results: {e}")
         return [
@@ -468,13 +453,6 @@ async def zap_generate_report(
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to generate report: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Report Generation Failed**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error generating report: {e}")
         return [

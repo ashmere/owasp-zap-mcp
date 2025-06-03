@@ -17,12 +17,12 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, Dict
 
+import toml
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import Config, Server
-import toml
 
 # Add project root to path
 PROJECT_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -46,10 +46,14 @@ logger = logging.getLogger("owasp-zap-mcp-main")
 config = load_config()
 logger.info("Main module loaded, configuration initialized")
 
+
 # --- Load version from pyproject.toml ---
 def get_project_version():
     try:
-        pyproject_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "pyproject.toml")
+        pyproject_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "pyproject.toml",
+        )
         with open(pyproject_path, "r") as f:
             pyproject = toml.load(f)
         return pyproject["project"]["version"]
@@ -57,13 +61,14 @@ def get_project_version():
         logger.warning(f"Could not load version from pyproject.toml: {e}")
         return "unknown"
 
+
 PROJECT_VERSION = get_project_version()
 
 # --- Create FastAPI App (Global Scope for SSE Mode) ---
 app = FastAPI(
     title="OWASP ZAP MCP Server (SSE Mode)",
     description="""
-OWASP ZAP MCP Server provides a unified API and SSE interface for orchestrating security scans, retrieving reports, and managing ZAP operations. 
+OWASP ZAP MCP Server provides a unified API and SSE interface for orchestrating security scans, retrieving reports, and managing ZAP operations.
 It exposes endpoints for health checks, scan management, and integrates with the OWASP ZAP API for automated security testing workflows.
     """,
     version=PROJECT_VERSION,
@@ -173,10 +178,17 @@ async def start_sse_server(args):
     print("=" * 50)
     print(f"🔧 Server Host: {args.host}")
     print(f"🔧 Server Port: {args.port}")
-    print(f"🔧 Log Level: {config.get('log_level_str', 'INFO')}")
+    try:
+        log_level_str = config.get('log_level_str', 'INFO') if config else 'INFO'
+        zap_base_url = config.get('zap_base_url', 'NOT SET') if config else 'NOT SET'
+    except Exception as e:
+        print(f"⚠️  Warning: config not set or invalid: {e}")
+        log_level_str = 'INFO'
+        zap_base_url = 'NOT SET'
+    print(f"🔧 Log Level: {log_level_str}")
     print(f"🔧 Debug Mode: {args.debug}")
     print(f"🔧 Reload Mode: {args.reload}")
-    print(f"🔧 ZAP Base URL: {config.get('zap_base_url', 'NOT SET')}")
+    print(f"🔧 ZAP Base URL: {zap_base_url}")
     print(f"🔧 Allowed Origins: {origins}")
     print(f"🔧 Allow Credentials: {allow_credentials}")
     print("-" * 50)

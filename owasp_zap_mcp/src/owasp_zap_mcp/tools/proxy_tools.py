@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
-from ..zap_client import ZAPClient, ZAPClientError
+from ..zap_client import ZAPClient
 
 logger = logging.getLogger(__name__)
 
@@ -155,14 +155,6 @@ For HTTPS traffic analysis:
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to configure ZAP proxy: {e}")
-        return [
-            TextContent(
-                type="text",
-                text=f"❌ **Proxy Configuration Failed**\n\nError: {str(e)}",
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error configuring proxy: {e}")
         return [
@@ -248,14 +240,6 @@ async def zap_get_proxy_history(
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to get proxy history: {e}")
-        return [
-            TextContent(
-                type="text",
-                text=f"❌ **Failed to Get Proxy History**\n\nError: {str(e)}",
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error getting proxy history: {e}")
         return [
@@ -336,13 +320,6 @@ The history clearing operation was not successful. This could be due to:
 
         return [TextContent(type="text", text=response_text)]
 
-    except ZAPClientError as e:
-        logger.error(f"Failed to clear proxy history: {e}")
-        return [
-            TextContent(
-                type="text", text=f"❌ **Failed to Clear History**\n\nError: {str(e)}"
-            )
-        ]
     except Exception as e:
         logger.error(f"Unexpected error clearing history: {e}")
         return [

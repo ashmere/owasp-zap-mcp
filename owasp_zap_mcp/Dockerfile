@@ -22,15 +22,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies with verbose output for debugging
-RUN echo "Installing Python dependencies..." && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    echo "Dependencies installed successfully"
-
 # Copy source code
 COPY . .
 
@@ -40,11 +31,17 @@ RUN echo "Verifying package structure..." && \
     test -f pyproject.toml && echo "✅ pyproject.toml found" || (echo "❌ pyproject.toml missing" && exit 1) && \
     test -d src/owasp_zap_mcp && echo "✅ Source directory found" || (echo "❌ Source directory missing" && exit 1)
 
-# Install the package and create non-root user
-RUN echo "Installing package..." && \
-    pip install -e . && \
-    echo "Package installed successfully" && \
-    useradd --create-home --shell /bin/bash zapuser
+# Install Python dependencies and package
+RUN echo "Installing Python dependencies and package..." && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir uv && \
+    uv pip install --system . && \
+    pip list && \
+    pip show owasp-zap-mcp && \
+    echo "Dependencies and package installed successfully"
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash zapuser
 
 # Test the installation
 RUN echo "Testing package installation..." && \

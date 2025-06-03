@@ -5,8 +5,8 @@ Basic tests to verify ZAP client functionality and API integration.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -178,6 +178,7 @@ class TestZAPClient:
         """Test getting security alerts."""
         zap_client.zap = mock_zap
         from src.owasp_zap_mcp.zap_client import ZAPAlert
+
         high_alert = ZAPAlert(
             alert_id="1",
             name="SQL Injection",
@@ -237,6 +238,7 @@ class TestZAPClient:
         zap_client.zap = mock_zap
 
         from src.owasp_zap_mcp.zap_client import ZAPAlert
+
         mock_alerts = [
             ZAPAlert(
                 alert_id="1",
@@ -310,11 +312,15 @@ class TestZAPClient:
             )
         ]
         from unittest.mock import MagicMock
+
         zap_client.zap = MagicMock()
         zap_client.zap.core.version = "2.14.0"
-        zap_client.zap.core.alerts.return_value = [alert.__dict__ for alert in mock_alerts]
+        zap_client.zap.core.alerts.return_value = [
+            alert.__dict__ for alert in mock_alerts
+        ]
         report = await zap_client.generate_json_report()
         import json
+
         report_data = json.loads(report)
         assert "alerts" in report_data
         assert len(report_data["alerts"]) == 1
@@ -360,11 +366,15 @@ class TestZAPClient:
             ),
         ]
         from unittest.mock import MagicMock
+
         zap_client.zap = MagicMock()
         zap_client.zap.core.version = "2.14.0"
-        zap_client.zap.core.alerts.return_value = [alert.__dict__ for alert in mock_alerts]
+        zap_client.zap.core.alerts.return_value = [
+            alert.__dict__ for alert in mock_alerts
+        ]
         report = await zap_client.generate_json_report()
         import json
+
         report_data = json.loads(report)
         assert len(report_data["alerts"]) == 3
         assert "alert_counts" in report_data
