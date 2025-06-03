@@ -12,8 +12,8 @@ import json
 import logging
 import time
 import uuid
-from typing import Any, Dict, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -261,11 +261,10 @@ class ZAPMCPSseServer:
         try:
             # Get session ID from query parameters
             session_id = request.query_params.get("session_id")
-            
+
             if not session_id:
                 return JSONResponse(
-                    {"error": "Missing session_id parameter"}, 
-                    status_code=400
+                    {"error": "Missing session_id parameter"}, status_code=400
                 )
 
             # Auto-create session if it doesn't exist (for testing)
@@ -278,7 +277,7 @@ class ZAPMCPSseServer:
             else:
                 # Update last active time
                 self.client_sessions[session_id]["last_active"] = datetime.now()
-            
+
             # Parse request body
             body = await request.json()
             logger.info(f"Received MCP message [Session ID: {session_id}]: {body}")

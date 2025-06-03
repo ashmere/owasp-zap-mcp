@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument("--port", type=int, default=SERVER_PORT, help="Port number")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
-    
+
     args = parser.parse_args()
     logger.debug(f"Parsed command line arguments: {vars(args)}")
     return args
@@ -72,11 +72,11 @@ def parse_args():
 @asynccontextmanager
 async def app_lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     logger.info("SSE application lifecycle starting...")
-    
+
     # Store configuration in app state
     app_instance.state.config = config
     logger.debug("Configuration stored in app state")
-    
+
     try:
         logger.info("Application startup complete, yielding control")
         yield
@@ -91,7 +91,7 @@ async def start_sse_server(args):
     """Start SSE Web server mode (Configures the global 'app')"""
     logger.info("=== Starting OWASP ZAP MCP SSE Server ===")
     logger.debug(f"Start arguments: {vars(args)}")
-    
+
     global app
 
     # --- Initialize MCP and Tools for SSE ---
@@ -102,18 +102,18 @@ async def start_sse_server(args):
         lifespan=None,  # Managed by FastAPI
     )
     logger.debug(f"MCP instance created: {sse_mcp.name}")
-    
+
     logger.info("Registering MCP tools for SSE mode...")
     try:
         await register_mcp_tools(sse_mcp)
         logger.info("✅ MCP tools registered successfully for SSE mode")
-        
+
         # Debug: List registered tools
         if logger.isEnabledFor(logging.DEBUG):
             tools = await sse_mcp.list_tools()
-            tool_names = [getattr(tool, 'name', str(tool)) for tool in tools]
+            tool_names = [getattr(tool, "name", str(tool)) for tool in tools]
             logger.debug(f"Registered tools: {tool_names}")
-            
+
     except Exception as e:
         logger.error(f"❌ Failed to register MCP tools: {e}", exc_info=True)
         raise
@@ -121,13 +121,13 @@ async def start_sse_server(args):
     # --- Configure Lifespan and CORS for the global app ---
     logger.debug("Configuring FastAPI app lifespan and CORS...")
     app.router.lifespan_context = app_lifespan
-    
+
     origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
     allow_credentials = os.getenv("MCP_ALLOW_CREDENTIALS", "false").lower() == "true"
-    
+
     logger.debug(f"CORS Origins: {origins}")
     logger.debug(f"CORS Allow Credentials: {allow_credentials}")
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -148,9 +148,9 @@ async def start_sse_server(args):
         raise
 
     # --- Print Configuration and Endpoints ---
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("     OWASP ZAP MCP Server (SSE Mode)")
-    print("="*50)
+    print("=" * 50)
     print(f"🔧 Server Host: {args.host}")
     print(f"🔧 Server Port: {args.port}")
     print(f"🔧 Log Level: {config.get('log_level_str', 'INFO')}")
@@ -160,7 +160,7 @@ async def start_sse_server(args):
     print(f"🔧 Allowed Origins: {origins}")
     print(f"🔧 Allow Credentials: {allow_credentials}")
     print("-" * 50)
-    
+
     base_url = f"http://{args.host}:{args.port}"
     print(f"🌐 Service URL: {base_url}")
     print(f"🏥 Health Check: GET {base_url}/health")
@@ -173,12 +173,12 @@ async def start_sse_server(args):
     print(f"   curl {base_url}/status")
     print("-" * 50)
     print("⚠️  Use Ctrl+C to stop the service")
-    print("="*50 + "\n")
+    print("=" * 50 + "\n")
 
     # --- Start Uvicorn Server ---
     logger.info(f"Starting Uvicorn server on {args.host}:{args.port}")
     logger.debug(f"Uvicorn config - debug: {args.debug}, reload: {args.reload}")
-    
+
     try:
         config = Config(
             app=app,
@@ -190,7 +190,7 @@ async def start_sse_server(args):
         server = Server(config=config)
         logger.info("🚀 Uvicorn server starting...")
         await server.serve()
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to start Uvicorn server: {e}", exc_info=True)
         raise
@@ -201,7 +201,7 @@ def run_main_sync():
     """Synchronous wrapper, primarily for SSE mode now."""
     sync_logger = logging.getLogger("run_main_sync")
     sync_logger.info("Entering run_main_sync (SSE mode entry point)")
-    
+
     try:
         args = parse_args()
         sync_logger.debug(f"Command line arguments parsed: {vars(args)}")
@@ -212,13 +212,15 @@ def run_main_sync():
                 # Run the async SSE server setup and Uvicorn loop
                 asyncio.run(start_sse_server(args))
                 sync_logger.info("✅ SSE server completed successfully")
-                
+
             except KeyboardInterrupt:
                 sync_logger.info("🛑 SSE server stopped by user (Ctrl+C)")
                 print("\n🛑 Server stopped by user")
-                
+
             except Exception as e:
-                sync_logger.critical(f"💥 Critical error in SSE server: {e}", exc_info=True)
+                sync_logger.critical(
+                    f"💥 Critical error in SSE server: {e}", exc_info=True
+                )
                 print(f"\n💥 Critical error: {e}")
                 raise
         else:
@@ -230,7 +232,7 @@ def run_main_sync():
             sync_logger.error(message)
             print(message, file=sys.stderr)
             sys.exit(1)
-            
+
     except Exception as e:
         sync_logger.critical(f"💥 Fatal error in run_main_sync: {e}", exc_info=True)
         print(f"\n💥 Fatal error: {e}")

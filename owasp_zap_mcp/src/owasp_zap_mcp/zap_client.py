@@ -58,7 +58,7 @@ class ZAPClient:
         self.api_key = api_key
         self.timeout = timeout
         self.zap = None
-        
+
         logger.debug(f"Initializing ZAP client with URL: {base_url}")
         logger.debug(f"API key configured: {'Yes' if api_key else 'No'}")
         logger.debug(f"Timeout: {timeout}s")
@@ -73,12 +73,14 @@ class ZAPClient:
         """Async context manager exit."""
         logger.debug("Exiting ZAP client context manager")
         if exc_type:
-            logger.debug(f"Context manager exit with exception: {exc_type.__name__}: {exc_val}")
+            logger.debug(
+                f"Context manager exit with exception: {exc_type.__name__}: {exc_val}"
+            )
 
     async def connect(self):
         """Initialize ZAP connection."""
         logger.info(f"Connecting to ZAP at {self.base_url}")
-        
+
         try:
             # Extract host and port from base_url for zapv2 library
             parsed_url = urlparse(self.base_url)
@@ -106,33 +108,39 @@ class ZAPClient:
     async def health_check(self) -> bool:
         """Check if ZAP is accessible."""
         logger.debug("Performing ZAP health check...")
-        
+
         try:
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             version = await loop.run_in_executor(None, lambda: self.zap.core.version)
-            
+
             duration = time.time() - start_time
-            logger.info(f"✅ ZAP health check passed - Version: {version} (took {duration:.2f}s)")
-            
+            logger.info(
+                f"✅ ZAP health check passed - Version: {version} (took {duration:.2f}s)"
+            )
+
             # Additional health checks in debug mode
             if logger.isEnabledFor(logging.DEBUG):
                 try:
                     # Check if ZAP is ready to scan
-                    status = await loop.run_in_executor(None, lambda: self.zap.core.version)
+                    status = await loop.run_in_executor(
+                        None, lambda: self.zap.core.version
+                    )
                     logger.debug(f"ZAP core status check: {status}")
-                    
+
                     # Get basic ZAP info
                     mode = await loop.run_in_executor(None, lambda: self.zap.core.mode)
                     logger.debug(f"ZAP mode: {mode}")
-                    
+
                 except Exception as debug_e:
-                    logger.debug(f"Additional health check failed (non-critical): {debug_e}")
-            
+                    logger.debug(
+                        f"Additional health check failed (non-critical): {debug_e}"
+                    )
+
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ ZAP health check failed: {e}")
             logger.debug(f"Health check error details: {type(e).__name__}: {str(e)}")
@@ -142,7 +150,7 @@ class ZAPClient:
         """Start a spider scan."""
         logger.info(f"Starting spider scan for URL: {url}")
         logger.debug(f"Spider scan parameters - URL: {url}, Max depth: {max_depth}")
-        
+
         try:
             loop = asyncio.get_event_loop()
 
@@ -159,26 +167,32 @@ class ZAPClient:
             # Start spider scan
             logger.debug(f"Initiating spider scan for {url}...")
             start_time = time.time()
-            
+
             scan_id = await loop.run_in_executor(
                 None, lambda: self.zap.spider.scan(url)
             )
-            
+
             duration = time.time() - start_time
-            logger.info(f"✅ Spider scan started successfully - ID: {scan_id} (took {duration:.2f}s)")
+            logger.info(
+                f"✅ Spider scan started successfully - ID: {scan_id} (took {duration:.2f}s)"
+            )
             logger.debug(f"Spider scan ID type: {type(scan_id)}, Value: {scan_id}")
-            
+
             return scan_id
 
         except Exception as e:
-            logger.error(f"❌ Failed to start spider scan for {url}: {e}", exc_info=True)
+            logger.error(
+                f"❌ Failed to start spider scan for {url}: {e}", exc_info=True
+            )
             raise
 
     async def active_scan(self, url: str, scan_policy: Optional[str] = None) -> str:
         """Start an active scan."""
         logger.info(f"Starting active scan for URL: {url}")
-        logger.debug(f"Active scan parameters - URL: {url}, Policy: {scan_policy or 'default'}")
-        
+        logger.debug(
+            f"Active scan parameters - URL: {url}, Policy: {scan_policy or 'default'}"
+        )
+
         try:
             loop = asyncio.get_event_loop()
 
@@ -192,45 +206,51 @@ class ZAPClient:
             # Start active scan
             logger.debug(f"Initiating active scan for {url}...")
             start_time = time.time()
-            
+
             scan_id = await loop.run_in_executor(None, lambda: self.zap.ascan.scan(url))
-            
+
             duration = time.time() - start_time
-            logger.info(f"✅ Active scan started successfully - ID: {scan_id} (took {duration:.2f}s)")
+            logger.info(
+                f"✅ Active scan started successfully - ID: {scan_id} (took {duration:.2f}s)"
+            )
             logger.debug(f"Active scan ID type: {type(scan_id)}, Value: {scan_id}")
-            
+
             return scan_id
 
         except Exception as e:
-            logger.error(f"❌ Failed to start active scan for {url}: {e}", exc_info=True)
+            logger.error(
+                f"❌ Failed to start active scan for {url}: {e}", exc_info=True
+            )
             raise
 
     async def get_spider_status(self, scan_id: str) -> ZAPScanStatus:
         """Get spider scan status."""
         logger.debug(f"Checking spider scan status for ID: {scan_id}")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             status = await loop.run_in_executor(
                 None, lambda: self.zap.spider.status(scan_id)
             )
-            
+
             duration = time.time() - start_time
             logger.debug(f"Spider status check completed in {duration:.2f}s")
-            
+
             # Convert status to enum
             status_int = int(status)
             logger.debug(f"Spider scan {scan_id} status: {status_int}%")
-            
+
             if status_int < 100:
                 result = ZAPScanStatus.RUNNING
-                logger.debug(f"Spider scan {scan_id} is running ({status_int}% complete)")
+                logger.debug(
+                    f"Spider scan {scan_id} is running ({status_int}% complete)"
+                )
             else:
                 result = ZAPScanStatus.COMPLETED
                 logger.info(f"✅ Spider scan {scan_id} completed (100%)")
-                
+
             return result
 
         except Exception as e:
@@ -241,29 +261,31 @@ class ZAPClient:
     async def get_active_scan_status(self, scan_id: str) -> ZAPScanStatus:
         """Get active scan status."""
         logger.debug(f"Checking active scan status for ID: {scan_id}")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             status = await loop.run_in_executor(
                 None, lambda: self.zap.ascan.status(scan_id)
             )
-            
+
             duration = time.time() - start_time
             logger.debug(f"Active scan status check completed in {duration:.2f}s")
-            
+
             # Convert status to enum
             status_int = int(status)
             logger.debug(f"Active scan {scan_id} status: {status_int}%")
-            
+
             if status_int < 100:
                 result = ZAPScanStatus.RUNNING
-                logger.debug(f"Active scan {scan_id} is running ({status_int}% complete)")
+                logger.debug(
+                    f"Active scan {scan_id} is running ({status_int}% complete)"
+                )
             else:
                 result = ZAPScanStatus.COMPLETED
                 logger.info(f"✅ Active scan {scan_id} completed (100%)")
-                
+
             return result
 
         except Exception as e:
@@ -274,23 +296,23 @@ class ZAPClient:
     async def get_alerts(self, risk_level: Optional[str] = None) -> List[ZAPAlert]:
         """Get alerts from ZAP."""
         logger.info(f"Retrieving alerts from ZAP (risk level: {risk_level or 'all'})")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             # Get all alerts
             alerts_data = await loop.run_in_executor(
                 None, lambda: self.zap.core.alerts()
             )
-            
+
             duration = time.time() - start_time
             logger.debug(f"Retrieved raw alerts data in {duration:.2f}s")
             logger.debug(f"Raw alerts count: {len(alerts_data) if alerts_data else 0}")
 
             alerts = []
             risk_filter_applied = 0
-            
+
             for alert_data in alerts_data:
                 try:
                     alert = ZAPAlert(
@@ -310,16 +332,18 @@ class ZAPClient:
                         alerts.append(alert)
                     else:
                         risk_filter_applied += 1
-                        
+
                 except Exception as alert_e:
                     logger.warning(f"Failed to parse alert data: {alert_e}")
                     logger.debug(f"Problematic alert data: {alert_data}")
 
             logger.info(f"✅ Retrieved {len(alerts)} alerts")
-            
+
             if risk_filter_applied > 0:
-                logger.debug(f"Filtered out {risk_filter_applied} alerts not matching risk level '{risk_level}'")
-            
+                logger.debug(
+                    f"Filtered out {risk_filter_applied} alerts not matching risk level '{risk_level}'"
+                )
+
             # Log risk distribution in debug mode
             if logger.isEnabledFor(logging.DEBUG) and alerts:
                 risk_counts = {}
@@ -336,21 +360,25 @@ class ZAPClient:
     async def generate_html_report(self) -> str:
         """Generate HTML report."""
         logger.info("Generating HTML report from ZAP")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             report = await loop.run_in_executor(
                 None, lambda: self.zap.core.htmlreport()
             )
-            
+
             duration = time.time() - start_time
             report_size = len(report) if report else 0
-            
-            logger.info(f"✅ Generated HTML report successfully ({report_size} bytes, took {duration:.2f}s)")
-            logger.debug(f"HTML report preview: {report[:200] if report else 'Empty report'}...")
-            
+
+            logger.info(
+                f"✅ Generated HTML report successfully ({report_size} bytes, took {duration:.2f}s)"
+            )
+            logger.debug(
+                f"HTML report preview: {report[:200] if report else 'Empty report'}..."
+            )
+
             return report
 
         except Exception as e:
@@ -360,26 +388,28 @@ class ZAPClient:
     async def generate_json_report(self) -> str:
         """Generate JSON report."""
         logger.info("Generating JSON report from ZAP")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             # Get alerts and format as JSON
             alerts_data = await loop.run_in_executor(
                 None, lambda: self.zap.core.alerts()
             )
-            
+
             # Create structured report
             report = {
                 "scan_info": {
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "zap_version": await loop.run_in_executor(None, lambda: self.zap.core.version),
+                    "zap_version": await loop.run_in_executor(
+                        None, lambda: self.zap.core.version
+                    ),
                 },
                 "alerts": alerts_data or [],
-                "alert_counts": {}
+                "alert_counts": {},
             }
-            
+
             # Add alert statistics
             if alerts_data:
                 risk_counts = {}
@@ -387,15 +417,17 @@ class ZAPClient:
                     risk = alert.get("risk", "Unknown")
                     risk_counts[risk] = risk_counts.get(risk, 0) + 1
                 report["alert_counts"] = risk_counts
-            
+
             json_report = json.dumps(report, indent=2, ensure_ascii=False)
-            
+
             duration = time.time() - start_time
             report_size = len(json_report)
-            
-            logger.info(f"✅ Generated JSON report successfully ({report_size} bytes, took {duration:.2f}s)")
+
+            logger.info(
+                f"✅ Generated JSON report successfully ({report_size} bytes, took {duration:.2f}s)"
+            )
             logger.debug(f"JSON report contains {len(alerts_data or [])} alerts")
-            
+
             return json_report
 
         except Exception as e:
@@ -405,17 +437,17 @@ class ZAPClient:
     async def clear_session(self) -> bool:
         """Clear ZAP session data."""
         logger.info("Clearing ZAP session data")
-        
+
         try:
             loop = asyncio.get_event_loop()
             start_time = time.time()
-            
+
             # Clear various ZAP data
             await loop.run_in_executor(None, lambda: self.zap.core.new_session())
-            
+
             duration = time.time() - start_time
             logger.info(f"✅ ZAP session cleared successfully (took {duration:.2f}s)")
-            
+
             return True
 
         except Exception as e:

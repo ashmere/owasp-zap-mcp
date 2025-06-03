@@ -5,6 +5,7 @@ This document provides essential information for AI assistants working with the 
 ## Quick Reference
 
 ### Key Commands
+
 ```bash
 # Test everything
 ./scripts/test.sh
@@ -20,6 +21,7 @@ LOG_LEVEL=DEBUG ./scripts/start.sh --type build
 ```
 
 ### Important Files
+
 - `src/owasp_zap_mcp/config.py` - Configuration and logging setup
 - `src/owasp_zap_mcp/main.py` - SSE server entry point
 - `src/owasp_zap_mcp/sse_server.py` - MCP interface implementation
@@ -27,6 +29,7 @@ LOG_LEVEL=DEBUG ./scripts/start.sh --type build
 - `tests/test_mcp_interface.py` - Core MCP integration tests
 
 ### Environment Variables
+
 ```bash
 LOG_LEVEL=DEBUG          # Enable debug logging
 ZAP_BASE_URL=http://zap:8080
@@ -53,12 +56,14 @@ The project implements a comprehensive logging system with configurable log leve
 ### Setting Log Level
 
 **Environment Variable (Recommended)**:
+
 ```bash
 export LOG_LEVEL=DEBUG
 ./scripts/start.sh --type build
 ```
 
 **Docker Environment**:
+
 ```bash
 # In docker-compose.yml or .env
 LOG_LEVEL=DEBUG
@@ -68,6 +73,7 @@ LOG_LEVEL=DEBUG docker-compose up
 ```
 
 **Dockerfile Default**:
+
 ```dockerfile
 ENV LOG_LEVEL=INFO  # Default in container
 ```
@@ -75,12 +81,14 @@ ENV LOG_LEVEL=INFO  # Default in container
 ### Debug Logging Examples
 
 **Tool Registration**:
+
 ```
 2024-01-15 10:30:01 - owasp-zap-tools-initializer - DEBUG - [register_mcp_tools:45] - Registering tool: zap_health_check
 2024-01-15 10:30:01 - owasp-zap-tools-initializer - INFO - [register_mcp_tools:102] - ✅ All tools registered successfully!
 ```
 
 **ZAP Client Operations**:
+
 ```
 2024-01-15 10:30:05 - owasp-zap-client - DEBUG - [connect:67] - Parsed ZAP URL - Host: zap, Port: 8080
 2024-01-15 10:30:05 - owasp-zap-client - INFO - [connect:78] - ✅ ZAP client initialized successfully
@@ -88,6 +96,7 @@ ENV LOG_LEVEL=INFO  # Default in container
 ```
 
 **MCP Interface**:
+
 ```
 2024-01-15 10:30:10 - owasp-zap-mcp-sse - DEBUG - [_process_tool_arguments:712] - Processing arguments for mcp_zap_spider_scan: original={'random_string': 'example.com'}, recent_query='None'
 2024-01-15 10:30:10 - owasp-zap-mcp-sse - INFO - [_process_tool_arguments:742] - Using random_string/recent_query as URL for mcp_zap_spider_scan: https://example.com
@@ -98,24 +107,28 @@ ENV LOG_LEVEL=INFO  # Default in container
 **Common Debugging Scenarios**:
 
 1. **Tool Registration Issues**:
+
    ```bash
    LOG_LEVEL=DEBUG ./scripts/start.sh --type build
    # Look for: "Failed to register tool" messages
    ```
 
 2. **ZAP Connection Problems**:
+
    ```bash
    LOG_LEVEL=DEBUG ./scripts/start.sh --type build
    # Look for: "ZAP health check failed" or connection errors
    ```
 
 3. **MCP Parameter Processing**:
+
    ```bash
    LOG_LEVEL=DEBUG ./scripts/start.sh --type build
    # Look for: "_process_tool_arguments" debug messages
    ```
 
 4. **Scan Execution Issues**:
+
    ```bash
    LOG_LEVEL=DEBUG ./scripts/start.sh --type build
    # Look for: Spider/Active scan start/status messages
@@ -126,11 +139,13 @@ ENV LOG_LEVEL=INFO  # Default in container
 **Console Output**: All logs go to stdout/stderr for container compatibility
 
 **Testing Logs**: Pytest captures logs automatically:
+
 ```bash
 pytest -xvs --log-cli-level=DEBUG tests/
 ```
 
 **Docker Logs**:
+
 ```bash
 docker-compose logs -f owasp-zap-mcp
 docker-compose logs -f zap
@@ -150,12 +165,14 @@ docker-compose logs -f zap
 ### Performance Monitoring
 
 **Timing Information** (DEBUG level):
+
 - ZAP API call durations
 - Tool execution timing  
 - MCP message processing time
 - Scan status check intervals
 
 **Resource Usage** (DEBUG level):
+
 - Memory usage for large reports
 - Network request timing
 - Scan progress percentages
@@ -171,6 +188,7 @@ docker-compose logs -f zap
 ### Integration with Development Workflow
 
 **During Development**:
+
 ```bash
 export LOG_LEVEL=DEBUG
 ./scripts/start.sh --type build
@@ -179,11 +197,13 @@ docker-compose logs -f owasp-zap-mcp
 ```
 
 **For Testing**:
+
 ```bash
 LOG_LEVEL=DEBUG pytest -xvs tests/test_specific_issue.py
 ```
 
 **For Production**:
+
 ```bash
 LOG_LEVEL=INFO  # Default, balanced information
 ```
@@ -204,21 +224,25 @@ class TestMCPInterface:
 ### Key Test Categories
 
 **Unit Tests** (`@pytest.mark.unit`):
+
 - Individual function testing
 - Mock-based testing
 - Fast execution
 
 **Integration Tests** (`@pytest.mark.integration`):
+
 - End-to-end functionality
 - Real service interaction
 - Requires running environment
 
 **MCP Tests** (`@pytest.mark.mcp`):
+
 - MCP protocol compliance
 - Tool registration verification
 - Parameter processing
 
 **SSE Tests** (`@pytest.mark.sse`):
+
 - Server-Sent Events functionality
 - Session management
 - HTTP endpoint testing
@@ -226,11 +250,13 @@ class TestMCPInterface:
 ### Running Tests
 
 **All Tests**:
+
 ```bash
 ./scripts/test.sh
 ```
 
 **Specific Categories**:
+
 ```bash
 pytest -m unit
 pytest -m integration
@@ -238,6 +264,7 @@ pytest -m "mcp and not slow"
 ```
 
 **Individual Tests**:
+
 ```bash
 pytest -xvs tests/test_mcp_interface.py::TestMCPInterfaceRegression::test_mcp_session_auto_creation
 ```
@@ -245,18 +272,20 @@ pytest -xvs tests/test_mcp_interface.py::TestMCPInterfaceRegression::test_mcp_se
 ### When to Update Tests
 
 1. **New Tool Added**: Update `test_tool_initializer.py`
-2. **Parameter Processing Changed**: Update `test_sse_server.py` 
+2. **Parameter Processing Changed**: Update `test_sse_server.py`
 3. **New MCP Feature**: Add to `test_mcp_interface.py`
 4. **Bug Fix**: Add regression test to prevent recurrence
 
 ### Test Environment Requirements
 
 **For Integration Tests**:
+
 - ZAP container running on localhost:8080
 - MCP server running on localhost:3000
 - Network connectivity between services
 
 **Environment Setup**:
+
 ```bash
 ./scripts/start.sh --type build
 # Wait for services to be ready
@@ -270,6 +299,7 @@ pytest -xvs tests/test_mcp_interface.py::TestMCPInterfaceRegression::test_mcp_se
 The SSE server implements smart parameter processing for MCP tools:
 
 **URL Processing**:
+
 ```python
 # Input: random_string = "example.com"
 # Output: url = "https://example.com"
@@ -279,15 +309,17 @@ The SSE server implements smart parameter processing for MCP tools:
 ```
 
 **Scan ID Extraction**:
+
 ```python
 # Input: random_string = "scan id is 123"
 # Output: scan_id = "123"
 
-# Input: random_string = "456" 
+# Input: random_string = "456"
 # Output: scan_id = "456"
 ```
 
 **Risk Level Detection**:
+
 ```python
 # Input: random_string = "show me high risk alerts"
 # Output: risk_level = "High"
@@ -352,7 +384,8 @@ src/owasp_zap_mcp/
 ### ZAP Connection Issues
 
 **Problem**: "ZAP health check failed"
-**Solution**: 
+**Solution**:
+
 1. Check ZAP container is running
 2. Verify ZAP_BASE_URL configuration
 3. Check network connectivity
@@ -362,6 +395,7 @@ src/owasp_zap_mcp/
 
 **Problem**: Tools not available in MCP client
 **Solution**:
+
 1. Check tool registration logs
 2. Verify all imports are working
 3. Check for circular import issues
@@ -371,6 +405,7 @@ src/owasp_zap_mcp/
 
 **Problem**: Parameters not being extracted correctly
 **Solution**:
+
 1. Enable DEBUG logging for parameter processing
 2. Check `_process_tool_arguments` logic
 3. Verify regular expressions for pattern matching
@@ -380,6 +415,7 @@ src/owasp_zap_mcp/
 
 **Problem**: Integration tests failing
 **Solution**:
+
 1. Verify environment is running (`./scripts/start.sh`)
 2. Check service health endpoints
 3. Look for port conflicts
@@ -437,4 +473,4 @@ src/owasp_zap_mcp/
 - [Development Guide](development.md) - Comprehensive development information
 - [Docker Guide](docker.md) - Container setup and configuration
 - [Scripts Guide](scripts.md) - Available scripts and usage
-- [Architecture Guide](architecture.md) - System architecture details 
+- [Architecture Guide](architecture.md) - System architecture details
