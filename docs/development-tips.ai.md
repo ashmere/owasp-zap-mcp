@@ -521,3 +521,17 @@ When making changes, check these documentation areas:
 ---
 
 *This document should be updated whenever significant patterns or lessons are learned during development. The test suite provides excellent examples of usage patterns and expected behaviors - always consult it when making changes.*
+
+## Manual/Debug Scripts
+
+All manual and debug scripts are now located in the scripts/ directory. They use a sys.path hack at the top to ensure imports work with the src layout, regardless of the working directory.
+
+To run a manual/debug script:
+
+```bash
+python scripts/manual_integration_script.py
+python scripts/test_mcp_params.py
+python scripts/test_sse_params.py
+```
+
+No need to set PYTHONPATH manually.

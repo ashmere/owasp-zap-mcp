@@ -179,8 +179,10 @@ For debugging and manual verification when the full environment is running:
 # Start the environment first
 ./scripts/start.sh
 
-# Run manual integration test
-python scripts/manual-integration-test.py
+# Run manual integration script (now in scripts/ and robust to src layout)
+python scripts/manual_integration_script.py
+
+# Note: All debug/manual scripts in scripts/ use a sys.path hack for src layout compatibility.
 
 # This tests:
 # - Health and status endpoints

@@ -474,3 +474,17 @@ src/owasp_zap_mcp/
 - [Docker Guide](docker.md) - Container setup and configuration
 - [Scripts Guide](scripts.md) - Available scripts and usage
 - [Architecture Guide](architecture.md) - System architecture details
+
+## Manual/Debug Scripts
+
+All manual and debug scripts are now located in the scripts/ directory. They use a sys.path hack at the top to ensure imports work with the src layout, regardless of the working directory.
+
+To run a manual/debug script:
+
+```bash
+python scripts/manual_integration_script.py
+python scripts/test_mcp_params.py
+python scripts/test_sse_params.py
+```
+
+No need to set PYTHONPATH manually.

@@ -413,3 +413,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Author**: Mat Davies ([@ashmere](https://github.com/ashmere/))  
 **Compatibility**: Cursor IDE, VS Code, MCP 1.0+
+
+## Manual/Debug Scripts
+
+All manual and debug scripts are now in the scripts/ directory. They use a sys.path hack for src layout compatibility and can be run directly:
+
+```bash
+python scripts/manual_integration_script.py
+python scripts/test_mcp_params.py
+python scripts/test_sse_params.py
+```
+
+No need to set PYTHONPATH manually.
