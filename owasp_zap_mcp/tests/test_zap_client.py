@@ -141,8 +141,7 @@ class TestZAPClient:
             status = await zap_client.get_spider_status("123")
 
             assert isinstance(status, ZAPScanStatus)
-            assert status.status == "RUNNING"
-            assert status.progress == 50
+            assert status == ZAPScanStatus.RUNNING
 
     @pytest.mark.asyncio
     async def test_get_spider_status_finished(self, zap_client, mock_zap):
@@ -156,8 +155,7 @@ class TestZAPClient:
 
             status = await zap_client.get_spider_status("123")
 
-            assert status.status == "FINISHED"
-            assert status.progress == 100
+            assert status == ZAPScanStatus.COMPLETED
 
     @pytest.mark.asyncio
     async def test_get_active_scan_status(self, zap_client, mock_zap):
@@ -172,8 +170,7 @@ class TestZAPClient:
             status = await zap_client.get_active_scan_status("456")
 
             assert isinstance(status, ZAPScanStatus)
-            assert status.status == "RUNNING"
-            assert status.progress == 75
+            assert status == ZAPScanStatus.RUNNING
 
     @pytest.mark.asyncio
     async def test_get_alerts(self, zap_client, mock_zap):
@@ -314,14 +311,15 @@ class TestZAPClient:
         """Test generating JSON report."""
         mock_alerts = [
             ZAPAlert(
-                {
-                    "name": "SQL Injection",
-                    "risk": "High",
-                    "confidence": "High",
-                    "description": "SQL injection vulnerability",
-                    "url": "https://example.com/login",
-                    "solution": "Use parameterized queries",
-                }
+                alert_id="1",
+                name="SQL Injection",
+                risk="High",
+                confidence="High",
+                url="https://example.com/login",
+                description="SQL injection vulnerability",
+                solution="Use parameterized queries",
+                reference="",
+                plugin_id="10001",
             )
         ]
 
@@ -339,34 +337,37 @@ class TestZAPClient:
         """Test JSON report includes risk breakdown like our implementation."""
         mock_alerts = [
             ZAPAlert(
-                {
-                    "name": "High Risk Alert",
-                    "risk": "High",
-                    "confidence": "High",
-                    "description": "High risk description",
-                    "url": "https://example.com/",
-                    "solution": "Fix high risk issue",
-                }
+                alert_id="2",
+                name="High Risk Alert",
+                risk="High",
+                confidence="High",
+                url="https://example.com/",
+                description="High risk description",
+                solution="Fix high risk issue",
+                reference="",
+                plugin_id="10002",
             ),
             ZAPAlert(
-                {
-                    "name": "Medium Risk Alert",
-                    "risk": "Medium",
-                    "confidence": "High",
-                    "description": "Medium risk description",
-                    "url": "https://example.com/",
-                    "solution": "Fix medium risk issue",
-                }
+                alert_id="3",
+                name="Medium Risk Alert",
+                risk="Medium",
+                confidence="High",
+                url="https://example.com/",
+                description="Medium risk description",
+                solution="Fix medium risk issue",
+                reference="",
+                plugin_id="10003",
             ),
             ZAPAlert(
-                {
-                    "name": "Informational Alert",
-                    "risk": "Informational",
-                    "confidence": "Medium",
-                    "description": "Informational description",
-                    "url": "https://example.com/",
-                    "solution": "Review informational finding",
-                }
+                alert_id="4",
+                name="Informational Alert",
+                risk="Informational",
+                confidence="Medium",
+                url="https://example.com/",
+                description="Informational description",
+                solution="Review informational finding",
+                reference="",
+                plugin_id="10004",
             ),
         ]
 
@@ -441,27 +442,19 @@ class TestZAPScanStatus:
 
     def test_scan_status_creation(self):
         """Test creating a scan status object."""
-        status = ZAPScanStatus(status="RUNNING", progress=75)
-
-        assert status.status == "RUNNING"
-        assert status.progress == 75
+        status = ZAPScanStatus.RUNNING
+        assert status == ZAPScanStatus.RUNNING
 
     def test_scan_status_finished(self):
         """Test scan status when finished."""
-        status = ZAPScanStatus(status="FINISHED", progress=100)
-
-        assert status.status == "FINISHED"
-        assert status.progress == 100
+        status = ZAPScanStatus.COMPLETED
+        assert status == ZAPScanStatus.COMPLETED
 
     def test_scan_status_edge_cases(self):
         """Test scan status edge cases."""
         # Test with 0 progress
-        status = ZAPScanStatus(status="STARTING", progress=0)
-        assert status.progress == 0
-
-        # Test with string progress - ZAPScanStatus stores it as-is
-        status = ZAPScanStatus(status="RUNNING", progress="50")
-        assert status.progress == "50"  # It stores the string as-is
+        status = ZAPScanStatus.NOT_STARTED
+        assert status == ZAPScanStatus.NOT_STARTED
 
 
 class TestZAPAlert:
@@ -470,15 +463,18 @@ class TestZAPAlert:
     def test_alert_creation(self):
         """Test creating an alert object."""
         alert_data = {
+            "alert_id": "1",
             "name": "XSS Vulnerability",
             "risk": "Medium",
             "confidence": "High",
-            "description": "Cross-site scripting vulnerability",
             "url": "https://example.com/search",
+            "description": "Cross-site scripting vulnerability",
             "solution": "Encode user input",
+            "reference": "",
+            "plugin_id": "10001",
         }
 
-        alert = ZAPAlert(alert_data)
+        alert = ZAPAlert(**alert_data)
 
         assert alert.name == "XSS Vulnerability"
         assert alert.risk == "Medium"
@@ -489,13 +485,23 @@ class TestZAPAlert:
 
     def test_alert_creation_with_missing_fields(self):
         """Test creating an alert object with missing fields."""
-        alert_data = {"name": "Test Alert"}
+        alert_data = {
+            "alert_id": "2",
+            "name": "Test Alert",
+            "risk": "",
+            "confidence": "",
+            "url": "",
+            "description": "",
+            "solution": "",
+            "reference": "",
+            "plugin_id": "",
+        }
 
-        alert = ZAPAlert(alert_data)
+        alert = ZAPAlert(**alert_data)
 
         assert alert.name == "Test Alert"
-        assert alert.risk == "Unknown"
-        assert alert.confidence == "Unknown"
+        assert alert.risk == ""
+        assert alert.confidence == ""
         assert alert.url == ""
         assert alert.description == ""
         assert alert.solution == ""
@@ -504,15 +510,18 @@ class TestZAPAlert:
         """Test creating alerts with realistic security findings."""
         # Test with a realistic security header finding
         alert_data = {
+            "alert_id": "3",
             "name": "Missing X-Frame-Options Header",
             "risk": "Medium",
             "confidence": "High",
-            "description": "X-Frame-Options header is not included in the response to protect against clickjacking attacks",
             "url": "https://skyral.io/",
+            "description": "X-Frame-Options header is not included in the response to protect against clickjacking attacks",
             "solution": "Most modern Web browsers support the X-Frame-Options HTTP header",
+            "reference": "",
+            "plugin_id": "10003",
         }
 
-        alert = ZAPAlert(alert_data)
+        alert = ZAPAlert(**alert_data)
 
         assert alert.name == "Missing X-Frame-Options Header"
         assert alert.risk == "Medium"
@@ -522,15 +531,18 @@ class TestZAPAlert:
     def test_alert_serialization(self):
         """Test alert can be serialized to dictionary."""
         alert_data = {
+            "alert_id": "4",
             "name": "Test Alert",
             "risk": "High",
             "confidence": "High",
-            "description": "Test description",
             "url": "https://example.com/",
+            "description": "Test description",
             "solution": "Test solution",
+            "reference": "",
+            "plugin_id": "10004",
         }
 
-        alert = ZAPAlert(alert_data)
+        alert = ZAPAlert(**alert_data)
 
         # Test that the alert can be converted back to dict (for JSON reports)
         alert_dict = alert.__dict__

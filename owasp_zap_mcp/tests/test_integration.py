@@ -48,34 +48,37 @@ class TestCompleteWorkflowIntegration:
 
             mock_alerts = [
                 ZAPAlert(
-                    {
-                        "name": "Missing X-Frame-Options Header",
-                        "risk": "Medium",
-                        "confidence": "High",
-                        "description": "X-Frame-Options header is not included in the response",
-                        "url": "https://example.com/",
-                        "solution": "Add X-Frame-Options header",
-                    }
+                    alert_id="1",
+                    name="Missing X-Frame-Options Header",
+                    risk="Medium",
+                    confidence="High",
+                    url="https://example.com/",
+                    description="X-Frame-Options header is not included in the response",
+                    solution="Add X-Frame-Options header",
+                    reference="",
+                    plugin_id="10001",
                 ),
                 ZAPAlert(
-                    {
-                        "name": "Content Security Policy (CSP) Header Not Set",
-                        "risk": "Medium",
-                        "confidence": "High",
-                        "description": "Content Security Policy header is missing",
-                        "url": "https://example.com/",
-                        "solution": "Implement Content Security Policy",
-                    }
+                    alert_id="2",
+                    name="Content Security Policy (CSP) Header Not Set",
+                    risk="Medium",
+                    confidence="High",
+                    url="https://example.com/",
+                    description="Content Security Policy header is missing",
+                    solution="Implement Content Security Policy",
+                    reference="",
+                    plugin_id="10002",
                 ),
                 ZAPAlert(
-                    {
-                        "name": "Information Disclosure - Sensitive Information in URL",
-                        "risk": "Informational",
-                        "confidence": "Medium",
-                        "description": "The response contains sensitive information",
-                        "url": "https://example.com/contact",
-                        "solution": "Review information disclosure",
-                    }
+                    alert_id="3",
+                    name="Information Disclosure - Sensitive Information in URL",
+                    risk="Informational",
+                    confidence="Medium",
+                    url="https://example.com/contact",
+                    description="The response contains sensitive information",
+                    solution="Review information disclosure",
+                    reference="",
+                    plugin_id="10003",
                 ),
             ]
             mock_client.get_alerts.return_value = mock_alerts

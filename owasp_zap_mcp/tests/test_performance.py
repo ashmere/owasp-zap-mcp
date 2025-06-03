@@ -193,18 +193,17 @@ class TestMemoryUsageScenarios:
 
             large_alerts = [
                 ZAPAlert(
-                    {
-                        "name": f"Alert {i}",
-                        "risk": "Medium",
-                        "confidence": "High",
-                        "description": f"Description for alert {i} "
-                        + "x" * 200,  # Long description
-                        "url": f"https://example.com/path{i}",
-                        "solution": f"Solution for alert {i} "
-                        + "y" * 200,  # Long solution
-                    }
+                    alert_id=str(i),
+                    name=f"Alert {i}",
+                    risk="Medium",
+                    confidence="High",
+                    url=f"https://example.com/alert/{i}",
+                    description=f"Description for alert {i}",
+                    solution=f"Solution for alert {i}",
+                    reference="",
+                    plugin_id=f"1000{i}",
                 )
-                for i in range(1000)  # 1000 alerts
+                for i in range(1000)
             ]
 
             mock_client.get_alerts.return_value = large_alerts
