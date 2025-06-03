@@ -179,12 +179,12 @@ async def start_sse_server(args):
     print(f"🔧 Server Host: {args.host}")
     print(f"🔧 Server Port: {args.port}")
     try:
-        log_level_str = config.get('log_level_str', 'INFO') if config else 'INFO'
-        zap_base_url = config.get('zap_base_url', 'NOT SET') if config else 'NOT SET'
+        log_level_str = config.get("log_level_str", "INFO") if config else "INFO"
+        zap_base_url = config.get("zap_base_url", "NOT SET") if config else "NOT SET"
     except Exception as e:
         print(f"⚠️  Warning: config not set or invalid: {e}")
-        log_level_str = 'INFO'
-        zap_base_url = 'NOT SET'
+        log_level_str = "INFO"
+        zap_base_url = "NOT SET"
     print(f"🔧 Log Level: {log_level_str}")
     print(f"🔧 Debug Mode: {args.debug}")
     print(f"🔧 Reload Mode: {args.reload}")

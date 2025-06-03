@@ -23,7 +23,9 @@ import aiohttp
 import json
 import logging
 import sys
+import os
 from pathlib import Path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../owasp_zap_mcp/src')))
 
 # Configure logging
 logging.basicConfig(
@@ -44,7 +46,7 @@ TEST_TARGETS = [
 ]
 
 
-async def test_health_endpoint(session):
+async def _test_health_endpoint(session):
     """Test the health endpoint"""
     try:
         url = f"{BASE_URL}/health"
@@ -70,7 +72,7 @@ async def test_health_endpoint(session):
         return False
 
 
-async def test_status_endpoint(session):
+async def _test_status_endpoint(session):
     """Test the status endpoint and tool availability"""
     try:
         url = f"{BASE_URL}/status"
@@ -97,7 +99,7 @@ async def test_status_endpoint(session):
         return False
 
 
-async def test_mcp_tool(session, tool_name, arguments=None):
+async def _test_mcp_tool(session, tool_name, arguments=None):
     """Test calling an MCP tool via the /mcp/messages endpoint"""
     if arguments is None:
         arguments = {}
@@ -183,7 +185,7 @@ async def run_comprehensive_test():
         # Test 1: Health endpoint
         logger.info("\n1️⃣ Testing Health Endpoint")
         logger.info("-" * 40)
-        health_ok = await test_health_endpoint(session)
+        health_ok = await _test_health_endpoint(session)
         test_results.append(("Health Endpoint", health_ok))
 
         if not health_ok:
@@ -193,7 +195,7 @@ async def run_comprehensive_test():
         # Test 2: Status endpoint
         logger.info("\n2️⃣ Testing Status Endpoint")
         logger.info("-" * 40)
-        status_ok = await test_status_endpoint(session)
+        status_ok = await _test_status_endpoint(session)
         test_results.append(("Status Endpoint", status_ok))
 
         if not status_ok:
@@ -203,7 +205,7 @@ async def run_comprehensive_test():
         # Test 3: Basic MCP tool (no parameters)
         logger.info("\n3️⃣ Testing Basic MCP Tool")
         logger.info("-" * 40)
-        basic_ok = await test_mcp_tool(session, "zap_health_check", {})
+        basic_ok = await _test_mcp_tool(session, "zap_health_check", {})
         test_results.append(("ZAP Health Check", basic_ok))
 
         # Test 4: MCP tools with URL normalization
@@ -215,7 +217,7 @@ async def run_comprehensive_test():
             logger.info(f"\n   Testing with target: {target}")
 
             # Test spider scan with random_string
-            spider_ok = await test_mcp_tool(
+            spider_ok = await _test_mcp_tool(
                 session,
                 "zap_spider_scan",
                 {"random_string": target}
@@ -233,7 +235,7 @@ async def run_comprehensive_test():
         logger.info("-" * 40)
 
         # Test with invalid tool name
-        invalid_tool_ok = not await test_mcp_tool(
+        invalid_tool_ok = not await _test_mcp_tool(
             session,
             "non_existent_tool",
             {}
@@ -247,7 +249,7 @@ async def run_comprehensive_test():
         param_tests = []
 
         # Test scan summary with URL
-        summary_ok = await test_mcp_tool(
+        summary_ok = await _test_mcp_tool(
             session,
             "zap_scan_summary",
             {"random_string": "httpbin.org"}
@@ -255,7 +257,7 @@ async def run_comprehensive_test():
         param_tests.append(summary_ok)
 
         # Test get alerts (no params needed)
-        alerts_ok = await test_mcp_tool(session, "zap_get_alerts", {})
+        alerts_ok = await _test_mcp_tool(session, "zap_get_alerts", {})
         param_tests.append(alerts_ok)
 
         param_processing_ok = all(param_tests)

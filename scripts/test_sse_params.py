@@ -4,8 +4,9 @@ Test script for SSE server parameter processing with random_string fallback
 """
 import asyncio
 import sys
-
-sys.path.append("/app")
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../owasp_zap_mcp/src')))
+# The above ensures imports work with src layout, regardless of CWD.
 
 from fastapi import FastAPI, Request
 
