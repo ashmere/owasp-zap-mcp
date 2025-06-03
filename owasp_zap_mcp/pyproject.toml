@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "owasp-zap-mcp"
-version = "0.2.0"
+version = "0.2.1"
 description = "OWASP ZAP MCP Server for AI-powered security testing (independent implementation)"
 readme = "README.md"
 requires-python = ">=3.12"

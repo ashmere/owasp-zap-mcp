@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import Config, Server
+import toml
 
 # Add project root to path
 PROJECT_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -45,9 +46,28 @@ logger = logging.getLogger("owasp-zap-mcp-main")
 config = load_config()
 logger.info("Main module loaded, configuration initialized")
 
+# --- Load version from pyproject.toml ---
+def get_project_version():
+    try:
+        pyproject_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "pyproject.toml")
+        with open(pyproject_path, "r") as f:
+            pyproject = toml.load(f)
+        return pyproject["project"]["version"]
+    except Exception as e:
+        logger.warning(f"Could not load version from pyproject.toml: {e}")
+        return "unknown"
+
+PROJECT_VERSION = get_project_version()
+
 # --- Create FastAPI App (Global Scope for SSE Mode) ---
 app = FastAPI(
     title="OWASP ZAP MCP Server (SSE Mode)",
+    description="""
+OWASP ZAP MCP Server provides a unified API and SSE interface for orchestrating security scans, retrieving reports, and managing ZAP operations. 
+It exposes endpoints for health checks, scan management, and integrates with the OWASP ZAP API for automated security testing workflows.
+    """,
+    version=PROJECT_VERSION,
+    # Default docs and OpenAPI endpoints are enabled by default
 )
 
 
@@ -172,6 +192,9 @@ async def start_sse_server(args):
     print(f"   curl {base_url}/health")
     print(f"   curl {base_url}/status")
     print("-" * 50)
+    print("🔎 OpenAPI schema: GET {}/openapi.json".format(base_url))
+    print("📚 Swagger UI:     {}/docs".format(base_url))
+    print("📚 ReDoc:          {}/redoc".format(base_url))
     print("⚠️  Use Ctrl+C to stop the service")
     print("=" * 50 + "\n")
 
