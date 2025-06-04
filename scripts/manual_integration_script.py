@@ -25,6 +25,7 @@ import logging
 import sys
 import os
 from pathlib import Path
+import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../owasp_zap_mcp/src')))
 
 # Configure logging
@@ -165,6 +166,33 @@ async def _test_mcp_tool(session, tool_name, arguments=None):
         return False
 
 
+async def call_mcp_report_tool_and_write_file(session, tool_name, out_path):
+    """Call an MCP report tool and write the extracted report to out_path."""
+    url = f"{BASE_URL}/mcp/messages"
+    params = {"session_id": SESSION_ID}
+    payload = {
+        "method": "tools/call",
+        "params": {"name": tool_name, "arguments": {}},
+        "jsonrpc": "2.0",
+        "id": 1
+    }
+    try:
+        async with session.post(url, params=params, json=payload) as response:
+            result = await response.json()
+            if "result" in result and "content" in result["result"]:
+                text = result["result"]["content"][0]["text"]
+                # Write raw text to file
+                with open(out_path, "w", encoding="utf-8") as f:
+                    f.write(text)
+                return text
+            else:
+                logger.error(f"No report content in MCP response for {tool_name}")
+                return None
+    except Exception as e:
+        logger.error(f"Exception calling {tool_name}: {e}")
+        return None
+
+
 async def run_comprehensive_test():
     """Run a comprehensive test of the MCP interface"""
 
@@ -262,6 +290,32 @@ async def run_comprehensive_test():
 
         param_processing_ok = all(param_tests)
         test_results.append(("Parameter Processing", param_processing_ok))
+
+        # Test 7: Report Generation
+        logger.info("\n7️⃣ Generating Reports via MCP Tools")
+        logger.info("-" * 40)
+        reports_dir = Path("reports")
+        reports_dir.mkdir(exist_ok=True)
+        html_path = reports_dir / "owasp-zap-report.html"
+        json_path = reports_dir / "owasp-zap-report.json"
+
+        # Generate HTML report
+        html_content = await call_mcp_report_tool_and_write_file(session, "zap_generate_html_report", html_path)
+        if html_content and html_content.strip().startswith("<!DOCTYPE html>"):
+            logger.info(f"✅ HTML report generated and saved to {html_path}")
+        else:
+            logger.error(f"❌ HTML report is invalid or missing: {html_path}")
+
+        # Generate JSON report
+        json_content = await call_mcp_report_tool_and_write_file(session, "zap_generate_json_report", json_path)
+        try:
+            parsed_json = json.loads(json_content) if json_content else None
+            if isinstance(parsed_json, dict):
+                logger.info(f"✅ JSON report generated and saved to {json_path}")
+            else:
+                logger.error(f"❌ JSON report is not a valid dict: {json_path}")
+        except Exception as e:
+            logger.error(f"❌ JSON report is invalid or missing: {json_path} ({e})")
 
         # Print summary
         logger.info("\n🏁 Test Summary")

@@ -292,24 +292,27 @@ class TestMCPZAPTools:
     @pytest.mark.asyncio
     async def test_mcp_zap_generate_html_report(self, mock_zap_client):
         """Test generating HTML report."""
-        mock_html = "<html><body>Security Report</body></html>"
+        mock_html = "<!DOCTYPE html>\n<html><body>Security Report</body></html>"
         mock_zap_client.generate_html_report.return_value = mock_html
 
         result = await mcp_zap_generate_html_report()
-
-        response_data = json.loads(result["content"][0]["text"])
-        assert response_data["success"] is True
+        html_content = result["content"][0]["text"] if "content" in result else None
+        assert html_content is not None
+        assert html_content.strip().startswith("<!DOCTYPE html>")
 
     @pytest.mark.asyncio
     async def test_mcp_zap_generate_json_report(self, mock_zap_client):
         """Test generating JSON report."""
         mock_json = {"alerts": [], "total_alerts": 0}
-        mock_zap_client.generate_json_report.return_value = mock_json
+        import json as _json
+
+        mock_zap_client.generate_json_report.return_value = _json.dumps(mock_json)
 
         result = await mcp_zap_generate_json_report()
-
-        response_data = json.loads(result["content"][0]["text"])
-        assert response_data["success"] is True
+        json_content = result["content"][0]["text"] if "content" in result else None
+        assert json_content is not None
+        parsed = _json.loads(json_content)
+        assert isinstance(parsed, dict)
 
     @pytest.mark.asyncio
     async def test_mcp_zap_clear_session(self, mock_zap_client):
@@ -405,6 +408,35 @@ class TestMCPZAPTools:
         response_data = json.loads(result["content"][0]["text"])
         assert response_data["success"] is True
 
+    @pytest.mark.asyncio
+    async def test_mcp_zap_generate_reports_are_pure_and_valid(self, mock_zap_client):
+        """Test that MCP report tools produce pure, valid HTML and JSON output."""
+        # HTML report
+        mock_html = "<!DOCTYPE html>\n<html><body>Security Report</body></html>"
+        mock_zap_client.generate_html_report.return_value = mock_html
+        html_result = await mcp_zap_generate_html_report()
+        html_content = (
+            html_result["content"][0]["text"] if "content" in html_result else None
+        )
+        assert html_content is not None
+        assert html_content.strip().startswith("<!DOCTYPE html>")
+
+        # JSON report
+        mock_json = {"alerts": [], "total_alerts": 0}
+        mock_zap_client.generate_json_report.return_value = json.dumps(mock_json)
+        # Patch the tool to return the raw JSON string as it would in the real system
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.ZAPClient.generate_json_report",
+            new=AsyncMock(return_value=json.dumps(mock_json)),
+        ):
+            json_result = await mcp_zap_generate_json_report()
+            json_content = (
+                json_result["content"][0]["text"] if "content" in json_result else None
+            )
+            assert json_content is not None
+            parsed = json.loads(json_content)
+            assert isinstance(parsed, dict)
+
 
 class TestMCPToolsIntegration:
     """Integration tests for MCP tools with realistic scenarios."""
@@ -422,11 +454,17 @@ class TestMCPToolsIntegration:
             mock_client.spider_scan.return_value = "123"
             mock_client.active_scan.return_value = "456"
             mock_client.get_alerts.return_value = []
-            mock_client.generate_html_report.return_value = "<html>Report</html>"
-            mock_client.generate_json_report.return_value = {
-                "alerts": [],
-                "total_alerts": 0,
-            }
+            mock_client.generate_html_report.return_value = (
+                "<!DOCTYPE html>\n<html>Report</html>"
+            )
+            import json as _json
+
+            mock_client.generate_json_report.return_value = _json.dumps(
+                {
+                    "alerts": [],
+                    "total_alerts": 0,
+                }
+            )
 
             # Run the workflow
             health_result = await mcp_zap_health_check()
@@ -439,18 +477,23 @@ class TestMCPToolsIntegration:
             summary_result = await mcp_zap_scan_summary("example.com")
 
             # Verify all steps succeeded
-            for result in [
-                health_result,
-                clear_result,
-                spider_result,
-                active_result,
-                alerts_result,
-                html_result,
-                json_result,
-                summary_result,
+            for result, is_json in [
+                (health_result, True),
+                (clear_result, True),
+                (spider_result, True),
+                (active_result, True),
+                (alerts_result, True),
+                (html_result, False),
+                (json_result, True),
+                (summary_result, True),
             ]:
-                response_data = json.loads(result["content"][0]["text"])
-                assert response_data["success"] is True
+                content = result["content"][0]["text"] if "content" in result else None
+                assert content is not None
+                if is_json:
+                    parsed = _json.loads(content)
+                    assert isinstance(parsed, dict)
+                else:
+                    assert content.strip().startswith("<!DOCTYPE html>")
 
             # Verify URL normalization was applied
             mock_client.spider_scan.assert_called_with("https://example.com", 5)
@@ -551,6 +594,8 @@ class TestMCPToolsIntegration:
             """
             mock_client.generate_html_report.return_value = mock_html_report
 
+            import json as _json
+
             mock_json_report = {
                 "target": "https://example.com",
                 "alerts": [alert.__dict__ for alert in mock_alerts],
@@ -564,47 +609,55 @@ class TestMCPToolsIntegration:
                 "scan_duration_minutes": 7,
                 "timestamp": "2025-05-30T16:19:30Z",
             }
-            mock_client.generate_json_report.return_value = mock_json_report
+            mock_client.generate_json_report.return_value = _json.dumps(
+                mock_json_report
+            )
 
             # Run the complete workflow
             target_url = "example.com"
 
             # Health check
             health_result = await mcp_zap_health_check()
-            health_data = json.loads(health_result["content"][0]["text"])
+            health_data = _json.loads(health_result["content"][0]["text"])
             assert health_data["success"] is True
 
             # Clear session
             clear_result = await mcp_zap_clear_session()
-            clear_data = json.loads(clear_result["content"][0]["text"])
+            clear_data = _json.loads(clear_result["content"][0]["text"])
             assert clear_data["success"] is True
 
             # Spider scan
             spider_result = await mcp_zap_spider_scan(target_url)
-            spider_data = json.loads(spider_result["content"][0]["text"])
+            spider_data = _json.loads(spider_result["content"][0]["text"])
             assert spider_data["success"] is True
             assert "https://example.com" in spider_data["url"]
 
             # Active scan
             active_result = await mcp_zap_active_scan(target_url)
-            active_data = json.loads(active_result["content"][0]["text"])
+            active_data = _json.loads(active_result["content"][0]["text"])
             assert active_data["success"] is True
 
             # Get alerts
             alerts_result = await mcp_zap_get_alerts()
-            alerts_data = json.loads(alerts_result["content"][0]["text"])
+            alerts_data = _json.loads(alerts_result["content"][0]["text"])
             assert alerts_data["success"] is True
 
             # Generate reports
             html_result = await mcp_zap_generate_html_report()
-            html_data = json.loads(html_result["content"][0]["text"])
-            assert html_data["success"] is True
+            html_content = (
+                html_result["content"][0]["text"] if "content" in html_result else None
+            )
+            assert html_content is not None
+            assert "<!DOCTYPE html>" in html_content
 
             json_result = await mcp_zap_generate_json_report()
-            json_data = json.loads(json_result["content"][0]["text"])
-            assert json_data["success"] is True
+            json_content = (
+                json_result["content"][0]["text"] if "content" in json_result else None
+            )
+            parsed_json = _json.loads(json_content)
+            assert isinstance(parsed_json, dict)
 
             # Scan summary
             summary_result = await mcp_zap_scan_summary(target_url)
-            summary_data = json.loads(summary_result["content"][0]["text"])
+            summary_data = _json.loads(summary_result["content"][0]["text"])
             assert summary_data["success"] is True

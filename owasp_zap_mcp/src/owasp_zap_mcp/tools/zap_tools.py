@@ -401,18 +401,7 @@ async def mcp_zap_generate_html_report() -> Dict[str, Any]:
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps(
-                            {
-                                "success": True,
-                                "message": f"✅ HTML report generated successfully",
-                                "report_length": len(report),
-                                "report_preview": (
-                                    report[:500] + "..."
-                                    if len(report) > 500
-                                    else report
-                                ),
-                            }
-                        ),
+                        "text": report,
                     }
                 ]
             }
@@ -422,12 +411,7 @@ async def mcp_zap_generate_html_report() -> Dict[str, Any]:
             "content": [
                 {
                     "type": "text",
-                    "text": json.dumps(
-                        {
-                            "success": False,
-                            "error": f"❌ Failed to generate HTML report: {str(e)}",
-                        }
-                    ),
+                    "text": f"❌ Failed to generate HTML report: {str(e)}",
                 }
             ]
         }
@@ -442,13 +426,7 @@ async def mcp_zap_generate_json_report() -> Dict[str, Any]:
                 "content": [
                     {
                         "type": "text",
-                        "text": json.dumps(
-                            {
-                                "success": True,
-                                "message": f"✅ JSON report generated with {report['total_alerts']} alerts",
-                                "report": report,
-                            }
-                        ),
+                        "text": report,
                     }
                 ]
             }
@@ -458,12 +436,7 @@ async def mcp_zap_generate_json_report() -> Dict[str, Any]:
             "content": [
                 {
                     "type": "text",
-                    "text": json.dumps(
-                        {
-                            "success": False,
-                            "error": f"❌ Failed to generate JSON report: {str(e)}",
-                        }
-                    ),
+                    "text": f"❌ Failed to generate JSON report: {str(e)}",
                 }
             ]
         }

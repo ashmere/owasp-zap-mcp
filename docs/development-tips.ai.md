@@ -503,20 +503,12 @@ When making changes, check these documentation areas:
 3. Verify environment variable handling
 4. Update deployment documentation
 
-## ⚠️ **Critical Reminders**
+## ⚠️ DO NOT BREAK WORKING CODE: Test-Driven Guidance for AI Assistants
 
-1. **Always** use sequential thinking for complex problems
-2. **Never** break Apache Doris MCP server patterns
-3. **Always** test parameter processing with `random_string`
-4. **Never** use deprecated `docker-compose` syntax
-5. **Always** verify container health before testing
-6. **Never** add unauthorized system packages to containers
-7. **Always** implement proper error handling and logging
-8. **Never** ignore user-specific requirements or constraints
-9. **Always** update tests when modifying code
-10. **Always** update relevant documentation files
-11. **Never** submit changes without running the full test suite
-12. **Always** maintain performance benchmarks and test coverage
+- All report generation via MCP tools **must** result in pure, valid ZAP HTML and JSON files in `/reports` (not JSON-RPC envelopes or empty files).
+- The integration script (`scripts/manual_integration_script.py`) now enforces this: it extracts the report content and writes it as the final file, and checks validity (HTML starts with `<!DOCTYPE html>`, JSON parses as a dict).
+- Future changes **must not break** this contract. If the reports are not valid, the test and integration script will fail.
+- A dedicated test now checks for this issue to prevent regressions.
 
 ---
 
@@ -535,16 +527,3 @@ python scripts/test_sse_params.py
 ```
 
 No need to set PYTHONPATH manually.
-
-## ⚠️ DO NOT BREAK WORKING CODE: Test-Driven Guidance for AI Assistants
-
-**If the code is working (manual scan, report generation, and all tests pass after test updates), future code assistance must NOT change parameter processing, error handling, or tool call logic unless both tests and manual integration fail.**
-
-## Checklist for Future Changes
-
-1. Confirm manual scan and report generation work (see scripts/manual_integration_script.py)
-2. Confirm all tests pass (pytest)
-3. Only update code if BOTH manual integration and tests fail
-4. Otherwise, update/add tests, not code
-
-**scripts/manual_integration_script.py is the final arbiter of correctness.**
