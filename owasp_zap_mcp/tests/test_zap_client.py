@@ -141,8 +141,10 @@ class TestZAPClient:
 
             status = await zap_client.get_spider_status("123")
 
-            assert isinstance(status, ZAPScanStatus)
-            assert status == ZAPScanStatus.RUNNING
+            assert hasattr(status, "status")
+            assert hasattr(status, "progress")
+            assert status.status == "running"
+            assert status.progress == 50
 
     @pytest.mark.asyncio
     async def test_get_spider_status_finished(self, zap_client, mock_zap):
@@ -156,7 +158,10 @@ class TestZAPClient:
 
             status = await zap_client.get_spider_status("123")
 
-            assert status == ZAPScanStatus.COMPLETED
+            assert hasattr(status, "status")
+            assert hasattr(status, "progress")
+            assert status.status == "completed"
+            assert status.progress == 100
 
     @pytest.mark.asyncio
     async def test_get_active_scan_status(self, zap_client, mock_zap):
@@ -170,8 +175,10 @@ class TestZAPClient:
 
             status = await zap_client.get_active_scan_status("456")
 
-            assert isinstance(status, ZAPScanStatus)
-            assert status == ZAPScanStatus.RUNNING
+            assert hasattr(status, "status")
+            assert hasattr(status, "progress")
+            assert status.status == "running"
+            assert status.progress == 75
 
     @pytest.mark.asyncio
     async def test_get_alerts(self, zap_client, mock_zap):

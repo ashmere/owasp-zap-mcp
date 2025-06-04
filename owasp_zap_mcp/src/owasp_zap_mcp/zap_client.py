@@ -45,6 +45,12 @@ class ZAPAlert:
     plugin_id: str
 
 
+@dataclass
+class ZAPScanStatusResult:
+    status: str
+    progress: int
+
+
 class ZAPClient:
     """Simplified ZAP client using zapv2 library."""
 
@@ -223,7 +229,7 @@ class ZAPClient:
             )
             raise
 
-    async def get_spider_status(self, scan_id: str) -> ZAPScanStatus:
+    async def get_spider_status(self, scan_id: str) -> ZAPScanStatusResult:
         """Get spider scan status."""
         logger.debug(f"Checking spider scan status for ID: {scan_id}")
 
@@ -238,27 +244,27 @@ class ZAPClient:
             duration = time.time() - start_time
             logger.debug(f"Spider status check completed in {duration:.2f}s")
 
-            # Convert status to enum
+            # Convert status to enum and progress
             status_int = int(status)
             logger.debug(f"Spider scan {scan_id} status: {status_int}%")
 
             if status_int < 100:
-                result = ZAPScanStatus.RUNNING
+                result_status = ZAPScanStatus.RUNNING.value
                 logger.debug(
                     f"Spider scan {scan_id} is running ({status_int}% complete)"
                 )
             else:
-                result = ZAPScanStatus.COMPLETED
+                result_status = ZAPScanStatus.COMPLETED.value
                 logger.info(f"✅ Spider scan {scan_id} completed (100%)")
 
-            return result
+            return ZAPScanStatusResult(status=result_status, progress=status_int)
 
         except Exception as e:
             logger.error(f"❌ Failed to get spider scan status for {scan_id}: {e}")
             logger.debug(f"Spider status error: {type(e).__name__}: {str(e)}")
-            return ZAPScanStatus.UNKNOWN
+            return ZAPScanStatusResult(status=ZAPScanStatus.UNKNOWN.value, progress=0)
 
-    async def get_active_scan_status(self, scan_id: str) -> ZAPScanStatus:
+    async def get_active_scan_status(self, scan_id: str) -> ZAPScanStatusResult:
         """Get active scan status."""
         logger.debug(f"Checking active scan status for ID: {scan_id}")
 
@@ -273,25 +279,25 @@ class ZAPClient:
             duration = time.time() - start_time
             logger.debug(f"Active scan status check completed in {duration:.2f}s")
 
-            # Convert status to enum
+            # Convert status to enum and progress
             status_int = int(status)
             logger.debug(f"Active scan {scan_id} status: {status_int}%")
 
             if status_int < 100:
-                result = ZAPScanStatus.RUNNING
+                result_status = ZAPScanStatus.RUNNING.value
                 logger.debug(
                     f"Active scan {scan_id} is running ({status_int}% complete)"
                 )
             else:
-                result = ZAPScanStatus.COMPLETED
+                result_status = ZAPScanStatus.COMPLETED.value
                 logger.info(f"✅ Active scan {scan_id} completed (100%)")
 
-            return result
+            return ZAPScanStatusResult(status=result_status, progress=status_int)
 
         except Exception as e:
             logger.error(f"❌ Failed to get active scan status for {scan_id}: {e}")
             logger.debug(f"Active scan status error: {type(e).__name__}: {str(e)}")
-            return ZAPScanStatus.UNKNOWN
+            return ZAPScanStatusResult(status=ZAPScanStatus.UNKNOWN.value, progress=0)
 
     async def get_alerts(self, risk_level: Optional[str] = None) -> List[ZAPAlert]:
         """Get alerts from ZAP."""

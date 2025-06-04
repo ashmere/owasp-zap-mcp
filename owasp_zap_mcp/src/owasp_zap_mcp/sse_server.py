@@ -258,6 +258,7 @@ class ZAPMCPSseServer:
 
     async def mcp_message(self, request: Request):
         """Handle MCP message requests"""
+        logger.debug("[DEBUG] Entered mcp_message handler")
         try:
             # Get session ID from query parameters
             session_id = request.query_params.get("session_id")
@@ -318,6 +319,10 @@ class ZAPMCPSseServer:
                     },
                 }
                 await self.client_sessions[session_id]["queue"].put(response)
+                logger.debug(
+                    "[DEBUG] Returning from mcp_message: initialize, response=%s",
+                    {"status": "success"},
+                )
                 return JSONResponse(
                     {"status": "success"},
                     headers={
@@ -358,6 +363,10 @@ class ZAPMCPSseServer:
                     "result": {"tools": tools_json, "resources": [], "prompts": []},
                 }
                 await self.client_sessions[session_id]["queue"].put(response)
+                logger.debug(
+                    "[DEBUG] Returning from mcp_message: listOfferings, response=%s",
+                    {"status": "success"},
+                )
                 return JSONResponse(
                     {"status": "success"},
                     headers={
@@ -393,6 +402,10 @@ class ZAPMCPSseServer:
                     "result": {"tools": tools_json},
                 }
                 await self.client_sessions[session_id]["queue"].put(response)
+                logger.debug(
+                    "[DEBUG] Returning from mcp_message: listTools, response=%s",
+                    {"status": "success"},
+                )
                 return JSONResponse(
                     {"status": "success"},
                     headers={
@@ -409,6 +422,29 @@ class ZAPMCPSseServer:
                 tool_name = params.get("name")
                 arguments = params.get("arguments", {})
 
+                logger.debug(
+                    f"[DEBUG] Initial tool_name: {tool_name}, arguments: {arguments}"
+                )
+
+                # RESTORE: Fallback for ZAP tools with empty arguments using recent_query
+                if (
+                    tool_name
+                    and (
+                        tool_name.startswith("zap_") or tool_name.startswith("mcp_zap_")
+                    )
+                ) and not arguments:
+                    recent_query = self._extract_recent_query(request)
+                    logger.debug(
+                        f"[DEBUG] Fallback triggered for {tool_name}, recent_query: {recent_query}"
+                    )
+                    if recent_query:
+                        arguments = {"random_string": recent_query}
+                        logger.debug(
+                            f"[DEBUG] Patched arguments for {tool_name}: {arguments}"
+                        )
+
+                logger.debug(f"[DEBUG] Final arguments for {tool_name}: {arguments}")
+
                 if not tool_name:
                     error_response = {
                         "jsonrpc": "2.0",
@@ -419,8 +455,12 @@ class ZAPMCPSseServer:
                         },
                     }
                     await self.client_sessions[session_id]["queue"].put(error_response)
+                    logger.debug(
+                        "[DEBUG] Returning from mcp_message: tool call (error), response=%s",
+                        error_response,
+                    )
                     return JSONResponse(
-                        {"status": "error"},
+                        error_response,
                         headers={
                             "Access-Control-Allow-Origin": "*",
                             "Access-Control-Allow-Credentials": "true",
@@ -462,8 +502,12 @@ class ZAPMCPSseServer:
                         "result": formatted_result,
                     }
                     await self.client_sessions[session_id]["queue"].put(response)
+                    logger.debug(
+                        "[DEBUG] Returning from mcp_message: tool call (success), response=%s",
+                        response,
+                    )
                     return JSONResponse(
-                        {"status": "success"},
+                        response,
                         headers={
                             "Access-Control-Allow-Origin": "*",
                             "Access-Control-Allow-Credentials": "true",
@@ -483,8 +527,12 @@ class ZAPMCPSseServer:
                         },
                     }
                     await self.client_sessions[session_id]["queue"].put(error_response)
+                    logger.debug(
+                        "[DEBUG] Returning from mcp_message: tool call (error), response=%s",
+                        error_response,
+                    )
                     return JSONResponse(
-                        {"status": "error"},
+                        error_response,
                         headers={
                             "Access-Control-Allow-Origin": "*",
                             "Access-Control-Allow-Credentials": "true",
@@ -503,6 +551,10 @@ class ZAPMCPSseServer:
                     "error": {"code": -32601, "message": f"Method not found: {method}"},
                 }
                 await self.client_sessions[session_id]["queue"].put(error_response)
+                logger.debug(
+                    "[DEBUG] Returning from mcp_message: unknown method, response=%s",
+                    {"status": "error"},
+                )
                 return JSONResponse(
                     {"status": "error"},
                     headers={
@@ -514,24 +566,12 @@ class ZAPMCPSseServer:
                     },
                 )
 
-            # Put response into queue (only if response is not None)
-            if response:
-                await self.client_sessions[session_id]["queue"].put(response)
-
-            # Return received confirmation
-            return JSONResponse(
-                {"status": "received"},
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Credentials": "true",
-                    "Access-Control-Allow-Methods": "*",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Expose-Headers": "*",
-                },
-            )
-
         except Exception as e:
-            logger.error(f"Error handling MCP message: {str(e)}")
+            logger.error(f"[DEBUG] Exception in mcp_message: {e}")
+            logger.debug(
+                "[DEBUG] Returning from mcp_message: exception, response=%s",
+                {"error": str(e)},
+            )
             return JSONResponse(
                 {"error": str(e)},
                 status_code=500,
@@ -575,6 +615,10 @@ class ZAPMCPSseServer:
         processed_args = self._process_tool_arguments(
             mapped_tool_name, arguments, recent_query
         )
+        if isinstance(processed_args, dict) and "__mcp_error__" in processed_args:
+            error_msg = processed_args["__mcp_error__"]
+            logger.error(f"Tool {tool_name} not called: {error_msg}")
+            return {"status": "error", "error": error_msg}
         logger.debug(f"Processed arguments: {processed_args}")
 
         try:
@@ -769,10 +813,8 @@ class ZAPMCPSseServer:
                 if not processed_args.get("url"):
                     url_fallback = random_string or recent_query
                     if url_fallback:
-                        # Try to extract URL from the string
                         import re
 
-                        # Look for URLs in the string
                         url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
                         url_matches = re.findall(url_pattern, url_fallback)
                         if url_matches:
@@ -797,10 +839,14 @@ class ZAPMCPSseServer:
                             logger.warning(
                                 f"{tool_name} missing url parameter, and random_string/recent_query is empty or URL cannot be extracted"
                             )
+                            return {
+                                "__mcp_error__": "Missing url parameter for scan tool"
+                            }
                     else:
                         logger.warning(
                             f"{tool_name} missing url parameter, and both random_string and recent_query are empty"
                         )
+                        return {"__mcp_error__": "Missing url parameter for scan tool"}
 
             # 2. For tools requiring scan_id parameter
             elif tool_name in ["mcp_zap_spider_status", "mcp_zap_active_scan_status"]:

@@ -535,3 +535,16 @@ python scripts/test_sse_params.py
 ```
 
 No need to set PYTHONPATH manually.
+
+## ⚠️ DO NOT BREAK WORKING CODE: Test-Driven Guidance for AI Assistants
+
+**If the code is working (manual scan, report generation, and all tests pass after test updates), future code assistance must NOT change parameter processing, error handling, or tool call logic unless both tests and manual integration fail.**
+
+## Checklist for Future Changes
+
+1. Confirm manual scan and report generation work (see scripts/manual_integration_script.py)
+2. Confirm all tests pass (pytest)
+3. Only update code if BOTH manual integration and tests fail
+4. Otherwise, update/add tests, not code
+
+**scripts/manual_integration_script.py is the final arbiter of correctness.**

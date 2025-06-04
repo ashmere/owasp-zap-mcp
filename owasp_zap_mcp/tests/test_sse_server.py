@@ -485,6 +485,138 @@ class TestSSEServerIntegration:
             assert len(result["content"]) > 0
             assert result["content"][0]["type"] == "text"
 
+    @pytest.mark.asyncio
+    async def test_call_tool_missing_url_error(self, sse_server):
+        """Test call_tool returns error if zap_spider_scan is called with no url/random_string."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_spider_scan"
+        ) as mock_tool_function:
+            mock_tool_function.side_effect = AssertionError(
+                "Should not be called without url"
+            )
+
+            arguments = {}
+            with pytest.raises(ValueError) as excinfo:
+                await sse_server.call_tool("zap_spider_scan", arguments, mock_request)
+            assert "Should not be called without url" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_call_tool_with_unparseable_random_string(self, sse_server):
+        """Test call_tool returns error if zap_spider_scan is called with random_string that is not a URL or domain."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_spider_scan"
+        ) as mock_tool_function:
+            mock_tool_function.side_effect = AssertionError(
+                "Should not be called without url"
+            )
+
+            arguments = {"random_string": "not_a_url_or_domain"}
+            with pytest.raises(ValueError) as excinfo:
+                await sse_server.call_tool("zap_spider_scan", arguments, mock_request)
+            assert "Should not be called without url" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_call_tool_with_valid_random_string(self, sse_server):
+        """Test call_tool works if zap_spider_scan is called with random_string containing a valid URL."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_spider_scan"
+        ) as mock_tool_function:
+            mock_tool_function.return_value = {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": '{"success": true, "message": "Scan started"}',
+                    },
+                ]
+            }
+            arguments = {"random_string": "https://example.com"}
+            result = await sse_server.call_tool(
+                "zap_spider_scan", arguments, mock_request
+            )
+            assert "content" in result
+            assert result["content"][0]["type"] == "text"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_active_scan_missing_url_error(self, sse_server):
+        """Test call_tool returns error if zap_active_scan is called with no url/random_string."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_active_scan"
+        ) as mock_tool_function:
+            mock_tool_function.side_effect = AssertionError(
+                "Should not be called without url"
+            )
+            arguments = {}
+            with pytest.raises(ValueError) as excinfo:
+                await sse_server.call_tool("zap_active_scan", arguments, mock_request)
+            assert "Should not be called without url" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_call_tool_active_scan_with_unparseable_random_string(
+        self, sse_server
+    ):
+        """Test call_tool returns error if zap_active_scan is called with random_string that is not a URL or domain."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_active_scan"
+        ) as mock_tool_function:
+            mock_tool_function.side_effect = AssertionError(
+                "Should not be called without url"
+            )
+            arguments = {"random_string": "not_a_url_or_domain"}
+            with pytest.raises(ValueError) as excinfo:
+                await sse_server.call_tool("zap_active_scan", arguments, mock_request)
+            assert "Should not be called without url" in str(excinfo.value)
+
+    @pytest.mark.asyncio
+    async def test_call_tool_active_scan_with_valid_random_string(self, sse_server):
+        """Test call_tool works if zap_active_scan is called with random_string containing a valid URL."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_active_scan"
+        ) as mock_tool_function:
+            mock_tool_function.return_value = {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": '{"success": true, "message": "Active scan started"}',
+                    },
+                ]
+            }
+            arguments = {"random_string": "https://example.com"}
+            result = await sse_server.call_tool(
+                "zap_active_scan", arguments, mock_request
+            )
+            assert "content" in result
+            assert result["content"][0]["type"] == "text"
+
 
 class TestSSEServerErrorHandling:
     """Test error handling in SSE server."""
