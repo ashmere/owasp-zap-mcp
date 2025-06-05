@@ -438,6 +438,7 @@ class TestMCPZAPTools:
             assert isinstance(parsed, dict)
 
 
+@pytest.mark.integration
 class TestMCPToolsIntegration:
     """Integration tests for MCP tools with realistic scenarios."""
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "owasp-zap-mcp"
-version = "0.3.2"
+version = "0.3.3"
 description = "OWASP ZAP MCP Server for AI-powered security testing (independent implementation)"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -105,10 +105,27 @@ skips = ["B101"]  # Skip assert_used test
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --strict-markers"
+addopts = "-ra -q --strict-markers --strict-config"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests requiring external services",
+    "mcp: MCP functionality tests",
+    "sse: SSE server tests",
+    "slow: Slow running tests",
+    "real_world: Real-world scenario tests",
+    "performance: Performance tests",
+    "error_handling: Error handling tests",
+    "url_normalization: URL normalization tests",
+    "security: Security-related tests"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:fastapi.*",
+    "ignore::DeprecationWarning:starlette.*",
+    "ignore::pytest.PytestUnhandledCoroutineWarning"
+]

@@ -54,7 +54,7 @@ class TestZAPClient:
         zap_client.zap = mock_zap
         mock_zap.core.version = "2.14.0"
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "2.14.0"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -68,7 +68,7 @@ class TestZAPClient:
         """Test health check failure."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.side_effect = Exception("Connection failed")
             mock_loop.return_value.run_in_executor = mock_executor
@@ -82,7 +82,7 @@ class TestZAPClient:
         """Test successful spider scan initiation."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "123"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -96,7 +96,7 @@ class TestZAPClient:
         """Test spider scan with URL normalization."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "123"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -120,7 +120,7 @@ class TestZAPClient:
         """Test successful active scan initiation."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "456"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -134,7 +134,7 @@ class TestZAPClient:
         """Test getting spider scan status - running."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "50"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -151,7 +151,7 @@ class TestZAPClient:
         """Test getting spider scan status - finished."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "100"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -168,7 +168,7 @@ class TestZAPClient:
         """Test getting active scan status."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = "75"
             mock_loop.return_value.run_in_executor = mock_executor
@@ -229,7 +229,7 @@ class TestZAPClient:
             },
         ]
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = mock_alerts_data
             mock_loop.return_value.run_in_executor = mock_executor
@@ -293,7 +293,7 @@ class TestZAPClient:
         zap_client.zap = mock_zap
         expected_report = "<html><body>Security Report</body></html>"
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = expected_report
             mock_loop.return_value.run_in_executor = mock_executor
@@ -391,7 +391,7 @@ class TestZAPClient:
         """Test clearing ZAP session successfully."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.return_value = None
             mock_loop.return_value.run_in_executor = mock_executor
@@ -405,7 +405,7 @@ class TestZAPClient:
         """Test clearing ZAP session failure."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.side_effect = Exception("Failed to clear session")
             mock_loop.return_value.run_in_executor = mock_executor
@@ -433,7 +433,7 @@ class TestZAPClient:
         """Test handling of scan timeouts."""
         zap_client.zap = mock_zap
 
-        with patch("asyncio.get_event_loop") as mock_loop:
+        with patch("asyncio.get_running_loop") as mock_loop:
             mock_executor = AsyncMock()
             mock_executor.side_effect = asyncio.TimeoutError("Scan timeout")
             mock_loop.return_value.run_in_executor = mock_executor

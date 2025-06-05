@@ -24,6 +24,7 @@ from src.owasp_zap_mcp.tools.zap_tools import (
 )
 
 
+@pytest.mark.integration
 class TestCompleteWorkflowIntegration:
     """Test complete security scanning workflows."""
 
@@ -116,7 +117,7 @@ class TestCompleteWorkflowIntegration:
                 },
                 "timestamp": "2025-05-30T16:19:30Z",
             }
-            mock_client.generate_json_report.return_value = mock_json_report
+            mock_client.generate_json_report.return_value = json.dumps(mock_json_report)
 
             mock_client_class.return_value.__aenter__.return_value = mock_client
             yield mock_client
@@ -157,13 +158,15 @@ class TestCompleteWorkflowIntegration:
 
         # Step 6: Generate HTML Report
         html_result = await mcp_zap_generate_html_report()
-        html_data = json.loads(html_result["content"][0]["text"])
-        assert html_data["success"] is True
+        html_content = html_result["content"][0]["text"]
+        assert html_content is not None
+        assert "<!DOCTYPE html>" in html_content
 
         # Step 7: Generate JSON Report
         json_result = await mcp_zap_generate_json_report()
-        json_data = json.loads(json_result["content"][0]["text"])
-        assert json_data["success"] is True
+        json_content = json_result["content"][0]["text"]
+        parsed_json = json.loads(json_content)
+        assert isinstance(parsed_json, dict)
 
         # Step 8: Scan Summary
         summary_result = await mcp_zap_scan_summary(target_url)
@@ -276,6 +279,7 @@ class TestCompleteWorkflowIntegration:
         assert summary_data["success"] is True
 
 
+@pytest.mark.integration
 class TestReportGenerationIntegration:
     """Test report generation and file handling."""
 
@@ -302,10 +306,10 @@ class TestReportGenerationIntegration:
 
             result = await mcp_zap_generate_html_report()
 
-            response_data = json.loads(result["content"][0]["text"])
-            assert response_data["success"] is True
-            # Could add HTML validation here if needed
-            assert len(mock_html) > 100  # Basic content check
+            html_content = result["content"][0]["text"]
+            assert html_content is not None
+            assert "<!DOCTYPE html>" in html_content
+            assert len(html_content) > 100  # Basic content check
 
     @pytest.mark.asyncio
     async def test_json_report_structure_validation(self):
@@ -326,18 +330,19 @@ class TestReportGenerationIntegration:
                 "total_alerts": 1,
                 "timestamp": "2025-05-30T16:19:30Z",
             }
-            mock_client.generate_json_report.return_value = mock_json
+            mock_client.generate_json_report.return_value = json.dumps(mock_json)
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             result = await mcp_zap_generate_json_report()
 
-            response_data = json.loads(result["content"][0]["text"])
-            assert response_data["success"] is True
+            json_content = result["content"][0]["text"]
+            parsed_json = json.loads(json_content)
+            assert isinstance(parsed_json, dict)
             # Validate JSON structure
-            assert "alerts" in mock_json
-            assert "total_alerts" in mock_json
-            assert isinstance(mock_json["alerts"], list)
-            assert isinstance(mock_json["total_alerts"], int)
+            assert "alerts" in parsed_json
+            assert "total_alerts" in parsed_json
+            assert isinstance(parsed_json["alerts"], list)
+            assert isinstance(parsed_json["total_alerts"], int)
 
     def test_report_directory_structure_creation(self, temp_reports_dir):
         """Test creating proper report directory structure."""
@@ -367,6 +372,8 @@ class TestReportGenerationIntegration:
         assert (base_dir / "summary" / "executive_summary.md").exists()
 
 
+@pytest.mark.integration
+@pytest.mark.real_world
 class TestRealWorldScenarios:
     """Test scenarios based on real-world usage patterns."""
 

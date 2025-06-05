@@ -460,9 +460,10 @@ class TestDataCorruptionScenarios:
         mock_zap_client_malformed_data.generate_html_report.return_value = None
 
         result = await mcp_zap_generate_html_report()
-        # Should be None or empty string
+        # Should return error message when report generation fails
         text = result["content"][0]["text"] if "content" in result else None
-        assert text is None or text == ""
+        assert text is not None
+        assert "Failed to generate HTML report" in text
 
     @pytest.mark.asyncio
     async def test_malformed_json_report_data(self, mock_zap_client_malformed_data):
@@ -471,6 +472,7 @@ class TestDataCorruptionScenarios:
         mock_zap_client_malformed_data.generate_json_report.return_value = None
 
         result = await mcp_zap_generate_json_report()
-        # Should be None or empty string
+        # Should return error message when report generation fails
         text = result["content"][0]["text"] if "content" in result else None
-        assert text is None or text == ""
+        assert text is not None
+        assert "Failed to generate JSON report" in text

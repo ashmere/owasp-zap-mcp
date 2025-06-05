@@ -24,6 +24,7 @@ import json
 import logging
 import sys
 import os
+import time
 from pathlib import Path
 import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../owasp_zap_mcp/src')))
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 BASE_URL = "http://localhost:3000"
-SESSION_ID = f"manual_test_session_{int(asyncio.get_event_loop().time())}"
+SESSION_ID = f"manual_test_session_{int(time.time())}"
 
 # Test targets (using realistic examples from our test suite)
 TEST_TARGETS = [

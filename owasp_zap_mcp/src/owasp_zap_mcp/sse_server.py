@@ -12,6 +12,7 @@ import json
 import logging
 import time
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -43,10 +44,25 @@ class ZAPMCPSseServer:
         # Set up SSE routes
         self.setup_sse_routes()
 
-        # Register startup event for cleanup tasks
-        @self.app.on_event("startup")
-        async def startup_event():
-            asyncio.create_task(self.cleanup_idle_sessions())
+        # Start background cleanup task - handled by lifespan in main.py
+        self._cleanup_task = None
+
+    async def start_background_tasks(self):
+        """Start background tasks like session cleanup."""
+        if self._cleanup_task is None:
+            self._cleanup_task = asyncio.create_task(self.cleanup_idle_sessions())
+            logger.info("Started session cleanup background task")
+
+    async def stop_background_tasks(self):
+        """Stop background tasks."""
+        if self._cleanup_task is not None:
+            self._cleanup_task.cancel()
+            try:
+                await self._cleanup_task
+            except asyncio.CancelledError:
+                pass
+            self._cleanup_task = None
+            logger.info("Stopped session cleanup background task")
 
     def setup_sse_routes(self):
         """Set up SSE related routes"""

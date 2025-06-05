@@ -102,6 +102,10 @@ async def app_lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     app_instance.state.config = config
     logger.debug("Configuration stored in app state")
 
+    # Start background tasks if SSE server is available
+    if hasattr(app_instance.state, "sse_server"):
+        await app_instance.state.sse_server.start_background_tasks()
+
     try:
         logger.info("Application startup complete, yielding control")
         yield
@@ -110,6 +114,9 @@ async def app_lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
         raise
     finally:
         logger.info("Cleaning up SSE application resources...")
+        # Stop background tasks if SSE server is available
+        if hasattr(app_instance.state, "sse_server"):
+            await app_instance.state.sse_server.stop_background_tasks()
 
 
 async def start_sse_server(args):
@@ -167,6 +174,8 @@ async def start_sse_server(args):
     logger.info("Initializing SSE server handler...")
     try:
         sse_server_handler = ZAPMCPSseServer(sse_mcp, app)
+        # Store SSE server in app state for lifespan management
+        app.state.sse_server = sse_server_handler
         logger.info("✅ SSE server handler initialized and routes registered")
     except Exception as e:
         logger.error(f"❌ Failed to initialize SSE server handler: {e}", exc_info=True)

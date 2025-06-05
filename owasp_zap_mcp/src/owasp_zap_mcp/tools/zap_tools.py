@@ -397,6 +397,15 @@ async def mcp_zap_generate_html_report() -> Dict[str, Any]:
     try:
         async with ZAPClient(base_url=ZAP_BASE_URL, api_key=ZAP_API_KEY) as client:
             report = await client.generate_html_report()
+            if report is None:
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "❌ Failed to generate HTML report: No report data returned",
+                        }
+                    ]
+                }
             return {
                 "content": [
                     {
@@ -422,6 +431,15 @@ async def mcp_zap_generate_json_report() -> Dict[str, Any]:
     try:
         async with ZAPClient(base_url=ZAP_BASE_URL, api_key=ZAP_API_KEY) as client:
             report = await client.generate_json_report()
+            if report is None:
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "❌ Failed to generate JSON report: No report data returned",
+                        }
+                    ]
+                }
             return {
                 "content": [
                     {

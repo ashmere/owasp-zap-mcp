@@ -117,10 +117,11 @@ class ZAPClient:
 
         try:
             # Run in thread pool to avoid blocking
-            loop = asyncio.get_event_loop()
             start_time = time.time()
 
-            version = await loop.run_in_executor(None, lambda: self.zap.core.version)
+            version = await asyncio.get_running_loop().run_in_executor(
+                None, lambda: self.zap.core.version
+            )
 
             duration = time.time() - start_time
             logger.info(
@@ -131,13 +132,15 @@ class ZAPClient:
             if logger.isEnabledFor(logging.DEBUG):
                 try:
                     # Check if ZAP is ready to scan
-                    status = await loop.run_in_executor(
+                    status = await asyncio.get_running_loop().run_in_executor(
                         None, lambda: self.zap.core.version
                     )
                     logger.debug(f"ZAP core status check: {status}")
 
                     # Get basic ZAP info
-                    mode = await loop.run_in_executor(None, lambda: self.zap.core.mode)
+                    mode = await asyncio.get_running_loop().run_in_executor(
+                        None, lambda: self.zap.core.mode
+                    )
                     logger.debug(f"ZAP mode: {mode}")
 
                 except Exception as debug_e:
@@ -158,14 +161,14 @@ class ZAPClient:
         logger.debug(f"Spider scan parameters - URL: {url}, Max depth: {max_depth}")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
 
             # Configure spider settings
             logger.debug("Configuring spider settings...")
-            await loop.run_in_executor(
+            await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.spider.set_option_max_depth(max_depth)
             )
-            await loop.run_in_executor(
+            await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.spider.set_option_thread_count(10)
             )
             logger.debug(f"Spider configured - Max depth: {max_depth}, Threads: 10")
@@ -174,7 +177,7 @@ class ZAPClient:
             logger.debug(f"Initiating spider scan for {url}...")
             start_time = time.time()
 
-            scan_id = await loop.run_in_executor(
+            scan_id = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.spider.scan(url)
             )
 
@@ -200,11 +203,11 @@ class ZAPClient:
         )
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
 
             # Configure active scan settings
             logger.debug("Configuring active scan settings...")
-            await loop.run_in_executor(
+            await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.ascan.set_option_thread_per_host(10)
             )
             logger.debug("Active scan threads configured: 10 per host")
@@ -213,7 +216,9 @@ class ZAPClient:
             logger.debug(f"Initiating active scan for {url}...")
             start_time = time.time()
 
-            scan_id = await loop.run_in_executor(None, lambda: self.zap.ascan.scan(url))
+            scan_id = await asyncio.get_running_loop().run_in_executor(
+                None, lambda: self.zap.ascan.scan(url)
+            )
 
             duration = time.time() - start_time
             logger.info(
@@ -234,10 +239,10 @@ class ZAPClient:
         logger.debug(f"Checking spider scan status for ID: {scan_id}")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
-            status = await loop.run_in_executor(
+            status = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.spider.status(scan_id)
             )
 
@@ -269,10 +274,10 @@ class ZAPClient:
         logger.debug(f"Checking active scan status for ID: {scan_id}")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
-            status = await loop.run_in_executor(
+            status = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.ascan.status(scan_id)
             )
 
@@ -304,11 +309,11 @@ class ZAPClient:
         logger.info(f"Retrieving alerts from ZAP (risk level: {risk_level or 'all'})")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
             # Get all alerts
-            alerts_data = await loop.run_in_executor(
+            alerts_data = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.core.alerts()
             )
 
@@ -368,10 +373,10 @@ class ZAPClient:
         logger.info("Generating HTML report from ZAP")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
-            report = await loop.run_in_executor(
+            report = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.core.htmlreport()
             )
 
@@ -396,11 +401,11 @@ class ZAPClient:
         logger.info("Generating JSON report from ZAP")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
             # Get alerts and format as JSON
-            alerts_data = await loop.run_in_executor(
+            alerts_data = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: self.zap.core.alerts()
             )
 
@@ -408,7 +413,7 @@ class ZAPClient:
             report = {
                 "scan_info": {
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "zap_version": await loop.run_in_executor(
+                    "zap_version": await asyncio.get_running_loop().run_in_executor(
                         None, lambda: self.zap.core.version
                     ),
                 },
@@ -445,11 +450,13 @@ class ZAPClient:
         logger.info("Clearing ZAP session data")
 
         try:
-            loop = asyncio.get_event_loop()
+            # Use asyncio.get_running_loop() instead
             start_time = time.time()
 
             # Clear various ZAP data
-            await loop.run_in_executor(None, lambda: self.zap.core.new_session())
+            await asyncio.get_running_loop().run_in_executor(
+                None, lambda: self.zap.core.new_session()
+            )
 
             duration = time.time() - start_time
             logger.info(f"✅ ZAP session cleared successfully (took {duration:.2f}s)")

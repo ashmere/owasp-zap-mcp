@@ -337,6 +337,7 @@ class TestSSEServerParameterProcessing:
             assert isinstance(result, dict)
 
 
+@pytest.mark.integration
 class TestSSEServerIntegration:
     """Integration tests for SSE server functionality."""
 
