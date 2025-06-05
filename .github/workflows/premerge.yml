@@ -74,7 +74,7 @@ jobs:
       - name: Install pre-commit hooks
         run: |
           echo "📦 Installing pre-commit hooks..."
-          pre-commit install --install-hooks
+          uv run pre-commit install --install-hooks
 
       - name: Run pre-commit on all files
         if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
@@ -84,7 +84,7 @@ jobs:
           else
             echo "🔍 Running pre-commit on all files (push to main)..."
           fi
-          pre-commit run --all-files
+          uv run pre-commit run --all-files
 
       - name: Run pre-commit on changed files
         if: ${{ github.event_name == 'pull_request' }}
@@ -94,7 +94,7 @@ jobs:
           git fetch origin ${{ github.base_ref }}
 
           # Run pre-commit on files changed in this PR
-          pre-commit run --from-ref origin/${{ github.base_ref }} --to-ref HEAD
+          uv run pre-commit run --from-ref origin/${{ github.base_ref }} --to-ref HEAD
 
       - name: Run fast unit tests
         run: |
