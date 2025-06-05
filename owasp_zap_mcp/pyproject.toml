@@ -46,20 +46,6 @@ Repository = "https://github.com/ashmere/owasp-zap-mcp"
 Issues = "https://github.com/ashmere/owasp-zap-mcp/issues"
 Documentation = "https://github.com/ashmere/owasp-zap-mcp/blob/main/README.md"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
-    "aiohttp>=3.8.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "isort>=5.13.0",
-    "mypy>=1.8.0",
-    "bandit>=1.7.5",
-    "pre-commit>=3.6.0",
-    "safety>=3.0.0"
-]
-
 [project.scripts]
 # Entry point for stdio mode
 owasp-zap-mcp = "owasp_zap_mcp.mcp_core:run_stdio"
@@ -126,6 +112,19 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:fastapi.*",
-    "ignore::DeprecationWarning:starlette.*",
-    "ignore::pytest.PytestUnhandledCoroutineWarning"
+    "ignore::DeprecationWarning:starlette.*"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=0.23.0",
+    "aiohttp>=3.8.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0",
+    "bandit>=1.7.5",
+    "pre-commit>=3.6.0",
+    "safety>=3.0.0",
 ]

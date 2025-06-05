@@ -55,20 +55,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Install pre-commit globally
-          pip install pre-commit
-
-          # Create virtual environment and install project dependencies using modern uv workflow
-          cd owasp_zap_mcp
-
           # Step 1: Create virtual environment (this was missing!)
-          uv venv
-
+          uv venv --project owasp_zap_mcp
+          source owasp_zap_mcp/.venv/bin/activate
           # Step 2: Sync dependencies from pyproject.toml and uv.lock
+          cd owasp_zap_mcp
           uv sync --dev
-
           cd ..
-
       - name: Cache pre-commit hooks
         if: ${{ steps.detect-local.outputs.skip_cache == 'false' }}
         uses: actions/cache@v3

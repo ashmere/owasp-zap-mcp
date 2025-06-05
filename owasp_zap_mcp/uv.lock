@@ -760,7 +760,7 @@ dependencies = [
     { name = "zaproxy" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "aiohttp" },
     { name = "bandit" },
@@ -776,25 +776,28 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", marker = "extra == 'dev'", specifier = ">=3.8.0" },
-    { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.5" },
-    { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
     { name = "fastapi", specifier = ">=0.95.0" },
-    { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0.0" },
-    { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.0.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.31.0" },
-    { name = "safety", marker = "extra == 'dev'", specifier = ">=3.0.0" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "uvicorn", specifier = ">=0.21.0" },
     { name = "zaproxy", specifier = "==0.4.0" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "aiohttp", specifier = ">=3.8.0" },
+    { name = "bandit", specifier = ">=1.7.5" },
+    { name = "black", specifier = ">=23.0.0" },
+    { name = "flake8", specifier = ">=6.0.0" },
+    { name = "isort", specifier = ">=5.13.0" },
+    { name = "mypy", specifier = ">=1.8.0" },
+    { name = "pre-commit", specifier = ">=3.6.0" },
+    { name = "pytest", specifier = ">=8.4.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
+    { name = "safety", specifier = ">=3.0.0" },
+]
 
 [[package]]
 name = "packaging"
