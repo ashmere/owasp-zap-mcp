@@ -4,6 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       skip_cache:
@@ -81,9 +83,13 @@ jobs:
           pre-commit install --install-hooks
 
       - name: Run pre-commit on all files
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
         run: |
-          echo "🔍 Running pre-commit on all files (manual trigger)..."
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "🔍 Running pre-commit on all files (manual trigger)..."
+          else
+            echo "🔍 Running pre-commit on all files (push to main)..."
+          fi
           pre-commit run --all-files
 
       - name: Run pre-commit on changed files
@@ -116,6 +122,9 @@ jobs:
             echo "  PR Number: #${{ github.event.number }}"
             echo "  Base Branch: ${{ github.base_ref }}"
             echo "  Head Branch: ${{ github.head_ref }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "  Branch: ${{ github.ref_name }}"
+            echo "  Commit: ${{ github.sha }}"
           fi
 
           echo ""
