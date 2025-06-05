@@ -1,0 +1,113 @@
+name: Pre-merge Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: 'Skip pre-commit cache'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write  # For commenting on PRs if needed
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for better pre-commit performance
+          fetch-depth: 0
+
+      - name: Detect local testing environment
+        id: detect-local
+        run: |
+          # Detect if running under act or other local testing conditions
+          if [[ -n "$ACT" || -n "$ACT_LOCAL_TESTING" || "${{ runner.name }}" == "Hosted Agent" ]]; then
+            echo "local_testing=true" >> $GITHUB_OUTPUT
+            echo "skip_cache=true" >> $GITHUB_OUTPUT
+            echo "🔧 Local testing environment detected"
+          else
+            echo "local_testing=false" >> $GITHUB_OUTPUT
+            echo "skip_cache=${{ inputs.skip_cache || 'false' }}" >> $GITHUB_OUTPUT
+            echo "🚀 GitHub Actions environment detected"
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install pre-commit
+          pip install pre-commit
+
+          # Install project dependencies for testing
+          if [[ -f "owasp_zap_mcp/requirements.txt" ]]; then
+            pip install -r owasp_zap_mcp/requirements.txt
+          fi
+
+          # Install development dependencies if available
+          if [[ -f "owasp_zap_mcp/pyproject.toml" ]]; then
+            cd owasp_zap_mcp && pip install -e ".[dev]" && cd ..
+          fi
+
+      - name: Cache pre-commit hooks
+        if: ${{ steps.detect-local.outputs.skip_cache == 'false' }}
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+
+      - name: Install pre-commit hooks
+        run: |
+          echo "📦 Installing pre-commit hooks..."
+          pre-commit install --install-hooks
+
+      - name: Run pre-commit on all files
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "🔍 Running pre-commit on all files (manual trigger)..."
+          pre-commit run --all-files
+
+      - name: Run pre-commit on changed files
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "🔍 Running pre-commit on changed files..."
+          # Get the base branch for comparison
+          git fetch origin ${{ github.base_ref }}
+
+          # Run pre-commit on files changed in this PR
+          pre-commit run --from-ref origin/${{ github.base_ref }} --to-ref HEAD
+
+      - name: Output summary
+        if: always()
+        run: |
+          echo "📋 Pre-commit Check Summary:"
+          echo "  Trigger: ${{ github.event_name }}"
+          echo "  Local Testing: ${{ steps.detect-local.outputs.local_testing }}"
+          echo "  Python Version: ${{ env.PYTHON_VERSION }}"
+          echo "  Cache Skipped: ${{ steps.detect-local.outputs.skip_cache }}"
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "  PR Number: #${{ github.event.number }}"
+            echo "  Base Branch: ${{ github.base_ref }}"
+            echo "  Head Branch: ${{ github.head_ref }}"
+          fi
+
+          echo ""
+          echo "✅ Pre-commit checks completed!"
