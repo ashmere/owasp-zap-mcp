@@ -13,6 +13,9 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    tags:
+      - 'v*'  # Trigger on any tag starting with 'v' (e.g., v0.3.2, v1.0.0)
 
 env:
   REGISTRY: ghcr.io
@@ -37,10 +40,16 @@ jobs:
             echo "local_testing=true" >> $GITHUB_OUTPUT
             echo "push_to_registry=false" >> $GITHUB_OUTPUT
             echo "🔧 Local testing environment detected - disabling registry operations"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # Tag push - automatically enable registry push for releases
+            echo "local_testing=false" >> $GITHUB_OUTPUT
+            echo "push_to_registry=true" >> $GITHUB_OUTPUT
+            echo "🏷️ Tag push detected - automatically enabling registry push for release"
           else
+            # Manual workflow_dispatch in production
             echo "local_testing=${{ inputs.local_testing }}" >> $GITHUB_OUTPUT
             echo "push_to_registry=${{ inputs.push_to_registry }}" >> $GITHUB_OUTPUT
-            echo "🚀 Production environment detected - using input parameters"
+            echo "🚀 Manual trigger detected - using input parameters"
           fi
 
       - name: Set up Python
@@ -81,6 +90,7 @@ jobs:
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}
             type=raw,value=latest
+            type=ref,event=tag
 
       - name: Build and push Docker image
         if: ${{ success() }}
@@ -99,10 +109,14 @@ jobs:
       - name: Output image details
         run: |
           echo "🔍 Build Configuration:"
+          echo "  Trigger: ${{ github.event_name }}"
           echo "  Local Testing: ${{ steps.detect-local.outputs.local_testing }}"
           echo "  Push to Registry: ${{ steps.detect-local.outputs.push_to_registry }}"
           echo "  Environment: ${{ env.ACT && 'act (local)' || 'GitHub Actions' }}"
           echo "  Runner: ${{ runner.name }}"
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "  Tag: ${{ github.ref_name }}"
+          fi
           echo ""
           echo "📦 Image Details:"
           echo "  Version: ${{ steps.version.outputs.version }}"
