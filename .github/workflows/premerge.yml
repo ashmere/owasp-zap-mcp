@@ -14,9 +14,6 @@ on:
         default: false
         type: boolean
 
-env:
-  PYTHON_VERSION: '3.12'
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -45,27 +42,25 @@ jobs:
             echo "🚀 GitHub Actions environment detected"
           fi
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "owasp_zap_mcp/pyproject.toml"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "owasp_zap_mcp/pyproject.toml"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          # Install uv for faster package installation (following Dockerfile pattern)
-          pip install uv
-
-          # Install pre-commit
+          # Install pre-commit globally
           pip install pre-commit
 
-          # Install project with development dependencies (following Dockerfile pattern)
+          # Install project with development dependencies using modern uv workflow
           cd owasp_zap_mcp
-          # Try uv first, fallback to pip if system is externally managed
-          if ! uv pip install --system -e ".[dev]" 2>/dev/null; then
-            echo "🔄 uv --system failed (externally managed Python), falling back to pip..."
-            pip install -e ".[dev]"
-          fi
+          uv sync --dev
           cd ..
 
       - name: Cache pre-commit hooks
@@ -107,7 +102,7 @@ jobs:
           echo "🧪 Running fast unit tests (excluding integration tests)..."
           cd owasp_zap_mcp
           # Run only fast, reliable tests - exclude integration tests that require ZAP
-          pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header
+          uv run pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header
 
       - name: Output summary
         if: always()
@@ -115,7 +110,6 @@ jobs:
           echo "📋 Pre-commit Check Summary:"
           echo "  Trigger: ${{ github.event_name }}"
           echo "  Local Testing: ${{ steps.detect-local.outputs.local_testing }}"
-          echo "  Python Version: ${{ env.PYTHON_VERSION }}"
           echo "  Cache Skipped: ${{ steps.detect-local.outputs.skip_cache }}"
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
