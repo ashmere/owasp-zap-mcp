@@ -71,11 +71,6 @@ jobs:
           restore-keys: |
             pre-commit-${{ runner.os }}-
 
-      - name: Install pre-commit hooks
-        run: |
-          echo "📦 Installing pre-commit hooks..."
-          uv run pre-commit install --install-hooks
-
       - name: Run pre-commit on all files
         if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
         run: |
