@@ -793,7 +793,7 @@ dev = [
     { name = "flake8", specifier = ">=6.0.0" },
     { name = "isort", specifier = ">=5.13.0" },
     { name = "mypy", specifier = ">=1.8.0" },
-    { name = "pre-commit", specifier = ">=3.6.0" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "pytest-asyncio", specifier = ">=0.23.0" },
     { name = "safety", specifier = ">=3.0.0" },
