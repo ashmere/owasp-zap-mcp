@@ -196,7 +196,7 @@ python -m pytest --tb=long
 
 Tests use realistic data based on actual security scans:
 
-- **Target URLs**: httpbin.org, skyral.io, example.com
+- **Target URLs**: httpbin.org, example.com, example.com
 - **Security Findings**: Real vulnerabilities found during testing
 - **Scan Results**: Actual ZAP scan outputs
 - **Error Conditions**: Real-world failure scenarios

@@ -37,7 +37,7 @@ async def test_mcp_tools():
     # Test 3: Spider scan with URL parameter
     print("\n3. Testing spider scan with URL parameter...")
     try:
-        result = await mcp_zap_spider_scan(url="https://skyral.io")
+        result = await mcp_zap_spider_scan(url="https://example.com")
         print(f"✅ Spider scan started: {result}")
     except Exception as e:
         print(f"❌ Spider scan failed: {e}")

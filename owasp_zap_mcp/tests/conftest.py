@@ -103,7 +103,7 @@ def sample_security_alerts():
                 "risk": "Medium",
                 "confidence": "High",
                 "description": "X-Frame-Options header is not included in the response",
-                "url": "https://skyral.io/",
+                "url": "https://example.com/",
                 "solution": "Add X-Frame-Options header",
             }
         ),
@@ -113,7 +113,7 @@ def sample_security_alerts():
                 "risk": "Medium",
                 "confidence": "High",
                 "description": "Content Security Policy header is missing",
-                "url": "https://skyral.io/",
+                "url": "https://example.com/",
                 "solution": "Implement Content Security Policy",
             }
         ),
@@ -123,7 +123,7 @@ def sample_security_alerts():
                 "risk": "Informational",
                 "confidence": "Medium",
                 "description": "The response contains sensitive information",
-                "url": "https://skyral.io/contact",
+                "url": "https://example.com/contact",
                 "solution": "Review information disclosure",
             }
         ),
@@ -133,7 +133,7 @@ def sample_security_alerts():
                 "risk": "Low",
                 "confidence": "High",
                 "description": "HSTS header is missing",
-                "url": "https://skyral.io/",
+                "url": "https://example.com/",
                 "solution": "Implement HSTS header",
             }
         ),
@@ -144,7 +144,7 @@ def sample_security_alerts():
 def url_normalization_test_cases():
     """Provide test cases for URL normalization."""
     return [
-        ("skyral.io", "https://skyral.io"),
+        ("example.com", "https://example.com"),
         ("httpbin.org", "https://httpbin.org"),
         ("api.example.com", "https://api.example.com"),
         ("localhost:3000", "localhost:3000"),  # No dot, not normalized
@@ -175,10 +175,10 @@ def mock_mcp_server():
 
 @pytest.fixture
 def realistic_scan_results():
-    """Provide realistic scan results based on our skyral.io testing."""
+    """Provide realistic scan results based on our example.com testing."""
     return {
-        "target_url": "skyral.io",
-        "normalized_url": "https://skyral.io",
+        "target_url": "example.com",
+        "normalized_url": "https://example.com",
         "spider_scan_id": "123",
         "active_scan_id": "456",
         "total_alerts": 3,

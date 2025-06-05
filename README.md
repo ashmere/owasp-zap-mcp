@@ -389,6 +389,22 @@ curl http://localhost:3000/status                   # MCP Status
 - ZAP web interface is exposed on localhost:8080 for debugging (can be disabled)
 - MCP server runs on localhost:3000 for AI integration
 
+## Changelog
+
+### v0.3.2 (Latest)
+
+- **Fixed**: Critical parameter processing bug where empty arguments `{}` caused tool failures
+- **Improved**: URL extraction with robust regex patterns for domain detection
+- **Enhanced**: Error handling with helpful guidance messages when tools are called incorrectly
+- **Added**: Fallback URL extraction from recent query context
+- **Updated**: Documentation with v0.3.2 improvements and troubleshooting guides
+
+### v0.3.1
+
+- Enhanced security scanning capabilities
+- Improved MCP tool integration
+- Added comprehensive test suite
+
 ## Contributing
 
 1. Fork the repository

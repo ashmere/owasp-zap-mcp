@@ -797,7 +797,53 @@ class ZAPMCPSseServer:
             f"Processing arguments for {tool_name}: original={arguments}, recent_query='{recent_query}'"
         )
 
-        # Handle potential random_string parameter as fallback
+        # Special handling for ZAP tools that require parameters
+        if tool_name.startswith("mcp_zap_"):
+
+            # Check if we have completely empty arguments (the common error case)
+            if not arguments:
+                logger.warning(
+                    f"Tool {tool_name} called with empty arguments, attempting recovery from recent_query"
+                )
+
+                # Try to extract URL from recent query for URL-requiring tools
+                if tool_name in [
+                    "mcp_zap_spider_scan",
+                    "mcp_zap_active_scan",
+                    "mcp_zap_scan_summary",
+                ]:
+                    if recent_query:
+                        url_fallback = self._extract_url_from_text(recent_query)
+                        if url_fallback:
+                            logger.info(
+                                f"Recovered URL from recent_query for {tool_name}: {url_fallback}"
+                            )
+                            processed_args["url"] = url_fallback
+                        else:
+                            return {
+                                "__mcp_error__": f"Tool {tool_name} requires a URL parameter. "
+                                f"Please provide the target URL in your request. "
+                                f"Example: 'scan https://example.com' or call with {{'random_string': 'example.com'}}"
+                            }
+                    else:
+                        return {
+                            "__mcp_error__": f"Tool {tool_name} requires a URL parameter. "
+                            f"Please provide the target URL in your request. "
+                            f"Example: 'scan https://example.com' or call with {{'random_string': 'example.com'}}"
+                        }
+
+                # For scan status tools, we can't recover without a scan ID
+                elif tool_name in [
+                    "mcp_zap_spider_status",
+                    "mcp_zap_active_scan_status",
+                ]:
+                    return {
+                        "__mcp_error__": f"Tool {tool_name} requires a scan_id parameter. "
+                        f"Please provide the scan ID from a previous scan. "
+                        f"Example: call with {{'random_string': '123'}}"
+                    }
+
+        # Handle potential random_string parameter as fallback (existing logic)
         if "random_string" in processed_args and tool_name.startswith("mcp_zap_"):
             random_string = processed_args.pop("random_string", "")
             logger.debug(
@@ -811,42 +857,23 @@ class ZAPMCPSseServer:
                 "mcp_zap_scan_summary",
             ]:
                 if not processed_args.get("url"):
-                    url_fallback = random_string or recent_query
+                    url_fallback = self._extract_url_from_text(
+                        random_string or recent_query
+                    )
                     if url_fallback:
-                        import re
-
-                        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
-                        url_matches = re.findall(url_pattern, url_fallback)
-                        if url_matches:
-                            url_fallback = url_matches[0]
-                            logger.debug(f"Found URL pattern match: {url_fallback}")
-                        elif url_fallback and not url_fallback.startswith(
-                            ("http://", "https://")
-                        ):
-                            # If it looks like a domain, add https://
-                            if "." in url_fallback and " " not in url_fallback:
-                                url_fallback = f"https://{url_fallback}"
-                                logger.debug(
-                                    f"Added https:// to domain: {url_fallback}"
-                                )
-
-                        if url_fallback:
-                            logger.info(
-                                f"Using random_string/recent_query as URL for {tool_name}: {url_fallback}"
-                            )
-                            processed_args["url"] = url_fallback
-                        else:
-                            logger.warning(
-                                f"{tool_name} missing url parameter, and random_string/recent_query is empty or URL cannot be extracted"
-                            )
-                            return {
-                                "__mcp_error__": "Missing url parameter for scan tool"
-                            }
+                        logger.info(
+                            f"Using random_string/recent_query as URL for {tool_name}: {url_fallback}"
+                        )
+                        processed_args["url"] = url_fallback
                     else:
                         logger.warning(
-                            f"{tool_name} missing url parameter, and both random_string and recent_query are empty"
+                            f"{tool_name} missing url parameter, and random_string/recent_query contains no valid URL"
                         )
-                        return {"__mcp_error__": "Missing url parameter for scan tool"}
+                        return {
+                            "__mcp_error__": f"Tool {tool_name} requires a URL parameter. "
+                            f"Please provide a valid URL. "
+                            f"Example: 'https://example.com' or 'example.com'"
+                        }
 
             # 2. For tools requiring scan_id parameter
             elif tool_name in ["mcp_zap_spider_status", "mcp_zap_active_scan_status"]:
@@ -894,3 +921,43 @@ class ZAPMCPSseServer:
 
         logger.debug(f"Final processed arguments for {tool_name}: {processed_args}")
         return processed_args
+
+    def _extract_url_from_text(self, text):
+        """
+        Extract URL from text using various patterns.
+
+        Args:
+            text: Text that may contain a URL
+
+        Returns:
+            str: Extracted/normalized URL or None
+        """
+        if not text:
+            return None
+
+        import re
+
+        # First try to find complete URLs
+        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+        url_matches = re.findall(url_pattern, text)
+        if url_matches:
+            return url_matches[0]
+
+        # Then try to find domain-like patterns with paths and add https://
+        # Look for patterns like "example.com/path", "api.example.com", etc.
+        # Updated pattern to capture domain with optional path
+        domain_with_path_pattern = r"\b[a-zA-Z0-9][a-zA-Z0-9-]*\.(?:[a-zA-Z0-9][a-zA-Z0-9-]*\.)*[a-zA-Z]{2,}(?:/[^\s<>\"{}|\\^`\[\]]*)?(?:\?[^\s<>\"{}|\\^`\[\]]*)?(?:#[^\s<>\"{}|\\^`\[\]]*)?\b"
+        domain_matches = re.findall(domain_with_path_pattern, text)
+        for domain_with_path in domain_matches:
+            # Skip common non-domain patterns but preserve the path
+            domain_part = domain_with_path.split("/")[0]
+            if domain_part.lower() not in ["github.com", "localhost", "127.0.0.1"]:
+                return f"https://{domain_with_path}"
+
+        # If still no match, check if the entire string looks like a domain/URL
+        if text and "." in text and " " not in text.strip():
+            cleaned = text.strip()
+            if not cleaned.startswith(("http://", "https://")):
+                return f"https://{cleaned}"
+
+        return None

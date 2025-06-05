@@ -52,7 +52,7 @@ class TestSSEServerParameterProcessing:
             {
                 "params": {
                     "messages": [
-                        {"role": "user", "content": "scan skyral.io"},
+                        {"role": "user", "content": "scan example.com"},
                         {"role": "assistant", "content": "I'll scan that for you."},
                     ]
                 }
@@ -61,7 +61,7 @@ class TestSSEServerParameterProcessing:
         mock_request._json = {}
 
         result = sse_server._extract_recent_query(mock_request)
-        assert result == "scan skyral.io"
+        assert result == "scan example.com"
 
     def test_process_tool_arguments_url_from_random_string(self, sse_server):
         """Test processing tool arguments with URL extraction from random_string."""
@@ -92,7 +92,7 @@ class TestSSEServerParameterProcessing:
 
     def test_process_tool_arguments_url_already_present(self, sse_server):
         """Test that existing URL parameter is preserved."""
-        args = {"url": "https://existing.com", "random_string": "skyral.io"}
+        args = {"url": "https://existing.com", "random_string": "example.com"}
         result = sse_server._process_tool_arguments("mcp_zap_spider_scan", args, None)
 
         assert result["url"] == "https://existing.com"
@@ -501,9 +501,13 @@ class TestSSEServerIntegration:
             )
 
             arguments = {}
-            with pytest.raises(ValueError) as excinfo:
-                await sse_server.call_tool("zap_spider_scan", arguments, mock_request)
-            assert "Should not be called without url" in str(excinfo.value)
+            result = await sse_server.call_tool(
+                "zap_spider_scan", arguments, mock_request
+            )
+
+            # Should return error status instead of raising exception
+            assert result["status"] == "error"
+            assert "requires a URL parameter" in result["error"]
 
     @pytest.mark.asyncio
     async def test_call_tool_with_unparseable_random_string(self, sse_server):
@@ -521,9 +525,13 @@ class TestSSEServerIntegration:
             )
 
             arguments = {"random_string": "not_a_url_or_domain"}
-            with pytest.raises(ValueError) as excinfo:
-                await sse_server.call_tool("zap_spider_scan", arguments, mock_request)
-            assert "Should not be called without url" in str(excinfo.value)
+            result = await sse_server.call_tool(
+                "zap_spider_scan", arguments, mock_request
+            )
+
+            # Should return error status instead of raising exception
+            assert result["status"] == "error"
+            assert "requires a URL parameter" in result["error"]
 
     @pytest.mark.asyncio
     async def test_call_tool_with_valid_random_string(self, sse_server):
@@ -566,9 +574,13 @@ class TestSSEServerIntegration:
                 "Should not be called without url"
             )
             arguments = {}
-            with pytest.raises(ValueError) as excinfo:
-                await sse_server.call_tool("zap_active_scan", arguments, mock_request)
-            assert "Should not be called without url" in str(excinfo.value)
+            result = await sse_server.call_tool(
+                "zap_active_scan", arguments, mock_request
+            )
+
+            # Should return error status instead of raising exception
+            assert result["status"] == "error"
+            assert "requires a URL parameter" in result["error"]
 
     @pytest.mark.asyncio
     async def test_call_tool_active_scan_with_unparseable_random_string(
@@ -587,13 +599,17 @@ class TestSSEServerIntegration:
                 "Should not be called without url"
             )
             arguments = {"random_string": "not_a_url_or_domain"}
-            with pytest.raises(ValueError) as excinfo:
-                await sse_server.call_tool("zap_active_scan", arguments, mock_request)
-            assert "Should not be called without url" in str(excinfo.value)
+            result = await sse_server.call_tool(
+                "zap_active_scan", arguments, mock_request
+            )
+
+            # Should return error status instead of raising exception
+            assert result["status"] == "error"
+            assert "requires a URL parameter" in result["error"]
 
     @pytest.mark.asyncio
     async def test_call_tool_active_scan_with_valid_random_string(self, sse_server):
-        """Test call_tool works if zap_active_scan is called with random_string containing a valid URL."""
+        """Test call_tool for active scan with valid random_string."""
         mock_request = MagicMock()
         mock_request.query_params = {}
         mock_request._body = None
@@ -607,15 +623,117 @@ class TestSSEServerIntegration:
                     {
                         "type": "text",
                         "text": '{"success": true, "message": "Active scan started"}',
-                    },
+                    }
                 ]
             }
-            arguments = {"random_string": "https://example.com"}
+
+            # Call tool with random_string containing URL
+            arguments = {"random_string": "example.com"}
             result = await sse_server.call_tool(
                 "zap_active_scan", arguments, mock_request
             )
+
+            # Verify the result has the expected MCP format
             assert "content" in result
+            assert len(result["content"]) > 0
             assert result["content"][0]["type"] == "text"
+
+    @pytest.mark.asyncio
+    async def test_call_tool_completely_empty_arguments_error(self, sse_server):
+        """Test call_tool reproduces exact error from logs: completely empty arguments {}."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = None
+        mock_request._json = {}
+
+        # This reproduces the exact scenario from the logs:
+        # Arguments: {} (completely empty, no random_string at all)
+        arguments = {}
+
+        # Test spider scan - should now return helpful error message instead of ValueError
+        result = await sse_server.call_tool("zap_spider_scan", arguments, mock_request)
+        assert result["status"] == "error"
+        assert "requires a URL parameter" in result["error"]
+        assert "example.com" in result["error"]  # Should include example
+
+        # Test active scan - same behavior
+        result = await sse_server.call_tool("zap_active_scan", arguments, mock_request)
+        assert result["status"] == "error"
+        assert "requires a URL parameter" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_call_tool_empty_args_with_url_in_recent_query(self, sse_server):
+        """Test call_tool can recover URL from recent_query when arguments are empty."""
+        mock_request = MagicMock()
+        mock_request.query_params = {}
+        mock_request._body = json.dumps(
+            {
+                "params": {
+                    "messages": [
+                        {"role": "user", "content": "please scan https://example.com"},
+                        {"role": "assistant", "content": "I'll scan that for you."},
+                    ]
+                }
+            }
+        ).encode()
+        mock_request._json = {}
+
+        with patch(
+            "src.owasp_zap_mcp.tools.zap_tools.mcp_zap_spider_scan"
+        ) as mock_tool_function:
+            mock_tool_function.return_value = {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": '{"success": true, "message": "Scan started"}',
+                    }
+                ]
+            }
+
+            # Call tool with empty arguments - should extract URL from recent_query
+            arguments = {}
+            result = await sse_server.call_tool(
+                "zap_spider_scan", arguments, mock_request
+            )
+
+            # Should succeed and call the tool with extracted URL
+            assert "content" in result
+            mock_tool_function.assert_called_once_with(url="https://example.com")
+
+    @pytest.mark.asyncio
+    async def test_extract_url_from_text_method(self, sse_server):
+        """Test the new _extract_url_from_text helper method."""
+        # Test with complete URLs
+        assert (
+            sse_server._extract_url_from_text("https://example.com")
+            == "https://example.com"
+        )
+        assert (
+            sse_server._extract_url_from_text("http://example.com")
+            == "http://example.com"
+        )
+
+        # Test with domains that should get https:// added
+        assert sse_server._extract_url_from_text("example.com") == "https://example.com"
+        assert (
+            sse_server._extract_url_from_text("api.example.com")
+            == "https://api.example.com"
+        )
+
+        # Test with text containing URLs
+        assert (
+            sse_server._extract_url_from_text("please scan https://example.com for me")
+            == "https://example.com"
+        )
+        assert (
+            sse_server._extract_url_from_text("check out example.com website")
+            == "https://example.com"
+        )
+
+        # Test with invalid inputs
+        assert sse_server._extract_url_from_text("") is None
+        assert sse_server._extract_url_from_text(None) is None
+        assert sse_server._extract_url_from_text("no domains here") is None
 
 
 class TestSSEServerErrorHandling:

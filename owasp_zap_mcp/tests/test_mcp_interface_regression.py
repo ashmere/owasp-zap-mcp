@@ -204,12 +204,12 @@ class TestMCPInterfaceRegression:
 
     @pytest.mark.asyncio
     async def test_mcp_real_world_workflow(self, mcp_base_url):
-        """Test a real-world MCP workflow similar to skyral.io scan"""
+        """Test a real-world MCP workflow similar to example.com scan"""
         session_id = "real_world_test"
         url = f"{mcp_base_url}/mcp/messages"
         params = {"session_id": session_id}
 
-        # Simulate the workflow we used for skyral.io
+        # Simulate the workflow we used for example.com
         workflow_steps = [
             {
                 "name": "zap_health_check",

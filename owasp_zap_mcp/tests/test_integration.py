@@ -122,7 +122,7 @@ class TestCompleteWorkflowIntegration:
             yield mock_client
 
     @pytest.mark.asyncio
-    async def test_skyral_io_complete_workflow(self, mock_zap_client):
+    async def test_example_com_complete_workflow(self, mock_zap_client):
         """Test complete security scanning workflow for example.com."""
         target_url = "example.com"
 
@@ -341,9 +341,9 @@ class TestReportGenerationIntegration:
 
     def test_report_directory_structure_creation(self, temp_reports_dir):
         """Test creating proper report directory structure."""
-        # Simulate the directory structure we create in scan_skyral_mcp.py
+        # Simulate the directory structure we create in scan_example_mcp.py
         timestamp = "20250530_161218"
-        base_dir = temp_reports_dir / "skyral_io" / timestamp
+        base_dir = temp_reports_dir / "example_com" / timestamp
 
         # Create subdirectories
         (base_dir / "html").mkdir(parents=True, exist_ok=True)

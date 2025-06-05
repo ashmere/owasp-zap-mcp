@@ -186,12 +186,24 @@ owasp_zap_mcp/
 
 ### **Parameter Processing (CRITICAL)**
 
-The SSE server must handle MCP interface limitations where only `random_string` parameter is available:
+The SSE server must handle MCP interface limitations where only `random_string` parameter is available. Recent improvements (v0.3.2) include robust error handling and URL extraction:
 
 ```python
 def _process_tool_arguments(self, tool_name, arguments, recent_query):
-    """Process tool parameters with random_string fallback"""
+    """Process tool parameters with random_string fallback and error handling"""
     processed_args = dict(arguments)
+
+    # Handle empty arguments case (v0.3.2 fix)
+    if not arguments or not arguments.get("random_string"):
+        # Try to extract URL from recent_query as fallback
+        if recent_query and tool_name in ["mcp_zap_spider_scan", "mcp_zap_active_scan", "mcp_zap_scan_summary"]:
+            extracted_url = self._extract_url_from_text(recent_query)
+            if extracted_url:
+                processed_args["url"] = extracted_url
+                return processed_args
+
+        # Return helpful error message if no URL can be determined
+        return None  # Triggers helpful error message in call_tool
 
     if "random_string" in processed_args and tool_name.startswith("mcp_zap_"):
         random_string = processed_args.pop("random_string", "")
@@ -199,10 +211,38 @@ def _process_tool_arguments(self, tool_name, arguments, recent_query):
         # URL extraction for spider_scan, active_scan, scan_summary
         if tool_name in ["mcp_zap_spider_scan", "mcp_zap_active_scan", "mcp_zap_scan_summary"]:
             if not processed_args.get("url"):
-                # Extract URL or convert domain to https://
-                url_fallback = extract_or_convert_url(random_string)
+                # Extract URL using improved regex patterns (v0.3.2)
+                url_fallback = self._extract_url_from_text(random_string)
                 if url_fallback:
                     processed_args["url"] = url_fallback
+```
+
+### **URL Extraction Improvements (v0.3.2)**
+
+The `_extract_url_from_text` method now includes robust URL pattern matching:
+
+```python
+def _extract_url_from_text(self, text):
+    """Extract URL from text using improved patterns (v0.3.2)"""
+    if not text:
+        return None
+
+    import re
+
+    # First try to find complete URLs
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    url_matches = re.findall(url_pattern, text)
+    if url_matches:
+        return url_matches[0]
+
+    # Then try to find domain patterns and add https://
+    # Improved domain pattern matching (v0.3.2)
+    domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
+    domain_matches = re.findall(domain_pattern, text)
+    if domain_matches:
+        return f"https://{domain_matches[0]}"
+
+    return None
 ```
 
 ### **Tool Function Signatures**
@@ -241,8 +281,11 @@ except Exception as e:
 ### **3. Parameter Processing**
 
 - ❌ **Don't ignore**: `random_string` parameter in MCP interface
+- ❌ **Don't assume**: Arguments will always contain `random_string` (v0.3.2 fix)
 - ✅ **Always implement**: Fallback parameter extraction following Doris pattern
+- ✅ **Always handle**: Empty arguments `{}` case with helpful error messages
 - **Test both**: Direct function calls AND MCP interface calls
+- **Test edge cases**: Empty arguments, malformed URLs, missing parameters
 
 ### **4. Import Patterns**
 

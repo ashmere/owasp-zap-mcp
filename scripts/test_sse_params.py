@@ -63,7 +63,7 @@ async def test_sse_parameter_processing():
     try:
         mock_request = MockRequest()
         result = await sse_server.call_tool(
-            "zap_spider_scan", {"random_string": "https://skyral.io"}, mock_request
+            "zap_spider_scan", {"random_string": "https://example.com"}, mock_request
         )
         print(f"✅ Spider scan with URL extraction: {result}")
     except Exception as e:
@@ -74,7 +74,7 @@ async def test_sse_parameter_processing():
     try:
         mock_request = MockRequest()
         result = await sse_server.call_tool(
-            "zap_spider_scan", {"random_string": "skyral.io"}, mock_request
+            "zap_spider_scan", {"random_string": "example.com"}, mock_request
         )
         print(f"✅ Spider scan with domain conversion: {result}")
     except Exception as e:
