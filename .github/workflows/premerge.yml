@@ -98,11 +98,6 @@ jobs:
           echo "🧪 Running fast unit tests (excluding integration tests)..."
           cd owasp_zap_mcp
 
-          # Debug: Show uv environment info
-          echo "📍 uv environment info:"
-          uv run python --version
-          uv run pip list | grep pytest || echo "⚠️ pytest not found"
-
           # Run only fast, reliable tests - exclude integration tests that require ZAP
           uv run pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header
 
