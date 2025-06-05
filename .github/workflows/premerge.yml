@@ -59,7 +59,11 @@ jobs:
 
           # Install project with development dependencies (following Dockerfile pattern)
           cd owasp_zap_mcp
-          uv pip install --system -e ".[dev]"
+          # Try uv first, fallback to pip if system is externally managed
+          if ! uv pip install --system -e ".[dev]" 2>/dev/null; then
+            echo "🔄 uv --system failed (externally managed Python), falling back to pip..."
+            pip install -e ".[dev]"
+          fi
           cd ..
 
       - name: Cache pre-commit hooks
