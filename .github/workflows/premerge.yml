@@ -42,25 +42,21 @@ jobs:
             echo "🚀 GitHub Actions environment detected"
           fi
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "owasp_zap_mcp/pyproject.toml"
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: "owasp_zap_mcp/pyproject.toml"
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
-          # Install pre-commit globally
+          python -m pip install --upgrade pip
+
+          # Install pre-commit
           pip install pre-commit
 
-          # Install project with development dependencies using modern uv workflow
+          # Install project with development dependencies (fallback to pip)
           cd owasp_zap_mcp
-          uv sync --dev
+          pip install -e ".[dev]"
           cd ..
 
       - name: Cache pre-commit hooks
@@ -101,8 +97,14 @@ jobs:
         run: |
           echo "🧪 Running fast unit tests (excluding integration tests)..."
           cd owasp_zap_mcp
+
+          # Debug: Show environment info
+          echo "📍 Environment info:"
+          python --version
+          pip list | grep pytest || echo "⚠️ pytest not found"
+
           # Run only fast, reliable tests - exclude integration tests that require ZAP
-          uv run pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header
+          pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header
 
       - name: Output summary
         if: always()

@@ -87,7 +87,7 @@ repos:
     hooks:
       - id: pytest-fast
         name: Run fast Python tests (no Docker/ZAP)
-        entry: bash -c 'cd owasp_zap_mcp && uv run pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header'
+        entry: bash -c 'cd owasp_zap_mcp && pytest -v -m "not integration and not slow and not real_world" --tb=short --no-header'
         language: system
         types: [python]
         pass_filenames: false
